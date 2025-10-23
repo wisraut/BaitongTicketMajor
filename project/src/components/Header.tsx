@@ -8,7 +8,8 @@ import {
   MenuItem,
   MenuItems,
 } from "@headlessui/react"; //ลงheroicon และ import library
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { AiOutlineSearch } from "react-icons/ai";
 
 const navigation = [
   { name: "ทุกการแสดง", href: "#", current: true },
@@ -50,8 +51,6 @@ export default function Header() {
               className="h-16 w-auto sm:h-20 md:h-24"
             />
           </div>
-
-          {/* Desktop navigation next to logo */}
           <div className="hidden sm:block">
             <div className="flex space-x-4">
               {navigation.map((item) => (
@@ -72,6 +71,26 @@ export default function Header() {
             </div>
           </div>
         </div>
+        {/* searchbar */}
+        <div className="p-20 hidden sm:flex items-center">
+          <form className="relative">
+            <input
+              type="search"
+              name="q"
+              aria-label="Search"
+              placeholder="ค้นหา..."
+              className="w-56 rounded-full bg-gray-700 px-4 py-2 pr-10 text-sm text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <button
+              type="submit"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-gray-700"
+              aria-label="Submit search"
+            >
+              <AiOutlineSearch className=" w-5 text-white" />
+            </button>
+          </form>
+        </div>
+        {/* searchbar */}
         <div className="absolute right-4 inset-y-0 flex items-center gap-3">
           <Menu as="div" className="relative ml-3">
             <MenuButton className="flex rounded-full bg-gray-800 text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
