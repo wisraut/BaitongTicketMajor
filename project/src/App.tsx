@@ -1,4 +1,4 @@
-import BaiTongTicketPage from "./components/BaiTongTicketPage";
+import BaiTongTicketPage from "./page/BaiTongTicketPage";
 
 function App() {
   return <BaiTongTicketPage />;
