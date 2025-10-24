@@ -23,11 +23,11 @@ interface CartItem {
   qty: number;
 }
 
-/** Dropdown สำหรับ Desktop (เปิดทีละอัน + ภายในเลื่อนเองได้) */
+/** Dropdown สำหรับ Desktop (เปิดทีละอัน + ค้างไว้ได้) */
 const DesktopDrop: React.FC<{
   label: string;
-  openKey: MenuKey; // อันที่เปิดอยู่ (รวม null)
-  me: MenuKeyStrict; // คีย์ของตัวเอง (ไม่เป็น null)
+  openKey: MenuKey;          // อันที่เปิดอยู่ (รวม null)
+  me: MenuKeyStrict;         // คีย์ของตัวเอง (ไม่เป็น null)
   setOpen: (k: MenuKey) => void;
 }> = ({ label, openKey, me, setOpen }) => {
   const isOpen = openKey === me;
@@ -36,12 +36,12 @@ const DesktopDrop: React.FC<{
   return (
     <div
       className="relative"
-      onMouseEnter={() => setOpen(me)}
-      onMouseLeave={() => setOpen(null)}
+      onMouseEnter={() => setOpen(me)}      // เปิดเมื่อโฮเวอร์
+      // ❌ ไม่ปิดด้วย onMouseLeave เพื่อให้ลากลงไปที่แผงได้
     >
       <button
         type="button"
-        onClick={() => setOpen(isOpen ? null : me)}
+        onClick={() => setOpen(isOpen ? null : me)} // คลิกสลับ เปิด/ปิด
         className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition
                     ${isOpen ? "bg-white/10 text-white ring-1 ring-white/20" : "text-white/90 hover:bg-white/10"}`}
       >
@@ -51,14 +51,13 @@ const DesktopDrop: React.FC<{
 
       {isOpen && (
         <div className="absolute left-0 z-50 mt-2 w-56 rounded-xl border border-white/10 bg-slate-800 p-2 shadow-xl">
-          {/* กล่องภายในมีสกอร์ลของตัวเอง */}
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             {items.map((x: string) => (
               <a
                 key={x}
                 href="#"
                 className="block rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white"
-                onClick={() => setOpen(null)}
+                onClick={() => setOpen(null)} // เลือกแล้วปิด
               >
                 {x}
               </a>
@@ -69,6 +68,7 @@ const DesktopDrop: React.FC<{
     </div>
   );
 };
+
 
 const TopBar: React.FC = () => {
   // เดสก์ท็อป: เปิดทีละอัน
