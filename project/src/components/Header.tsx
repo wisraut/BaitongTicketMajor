@@ -12,8 +12,8 @@ import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { AiOutlineSearch } from "react-icons/ai";
 
 const navigation = [
-  { name: "ทุกการแสดง", href: "#", current: true },
-  { name: "GiftShop", href: "#", current: false },
+  { name: "ทุกการแสดง", href: "#", current: false },
+  { name: "GiftShop", href: "#", current: true },
   { name: "Promotions", href: "#", current: false },
 ];
 
@@ -26,7 +26,7 @@ export default function Header() {
     // nav bar
     <Disclosure
       as="nav"
-      className="fixed inset-x-0 top-0 z-50 w-full bg-gray-800 ..."
+      className="fixed inset-x-0 top-0 z-50 w-full bg-[#234C6A]"
     >
       <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8"></div>
       <div className="relative flex h-20 items-center justify-between">
@@ -85,11 +85,11 @@ export default function Header() {
               name="q"
               aria-label="Search"
               placeholder="ค้นหา..."
-              className="w-56 rounded-full bg-gray-700 px-4 py-2 pr-10 text-sm text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-56 rounded-full bg-cyan-800 opacity-40 px-4 py-2 pr-10 text-sm text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-gray-700"
+              className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full  bg-cyan-800 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               aria-label="Submit search"
             >
               <AiOutlineSearch className="w-5 text-white" />
@@ -99,7 +99,7 @@ export default function Header() {
         {/* searchbar */}
         <div className="flex items-center justify-start gap-6">
           <Menu as="div" className="relative ml-3">
-            <MenuButton className="flex rounded-full bg-gray-800 text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
+            <MenuButton className="flex rounded-full bg-[#234C6A] text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
               <span className="absolute -inset-1.5" />
               <span className="sr-only">Open user menu</span>
               <img

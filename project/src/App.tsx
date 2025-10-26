@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
-import Header from "./components/Header.tsx";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 function App() {
   return (
@@ -11,6 +12,7 @@ function App() {
           <h1 className="text-2xl font-bold">Home</h1>
         </div>
       </main>
+      <Footer />
     </div>
   );
 }
