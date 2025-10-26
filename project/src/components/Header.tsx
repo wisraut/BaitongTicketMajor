@@ -23,6 +23,7 @@ function classNames(...classes: Array<string | false | null | undefined>) {
 
 export default function Header() {
   return (
+    // nav bar
     <Disclosure
       as="nav"
       className="fixed inset-x-0 top-0 z-50 w-full bg-gray-800 ..."
@@ -43,6 +44,9 @@ export default function Header() {
             />
           </DisclosureButton>
         </div>
+        {/* nav bar*/}
+
+        {/* logo */}
         <div className="flex flex-1 items-center justify-start gap-6">
           <div className="flex shrink-0 items-center">
             <img
@@ -51,6 +55,8 @@ export default function Header() {
               className="h-16 w-auto sm:h-20 md:h-24"
             />
           </div>
+          {/* logo */}
+
           <div className="hidden sm:block">
             <div className="flex space-x-4">
               {navigation.map((item) => (
@@ -72,7 +78,7 @@ export default function Header() {
           </div>
         </div>
         {/* searchbar */}
-        <div className="p-20 hidden sm:flex items-center">
+        <div className="hidden sm:flex items-center ml-6">
           <form className="relative">
             <input
               type="search"
@@ -86,12 +92,12 @@ export default function Header() {
               className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full bg-gray-700"
               aria-label="Submit search"
             >
-              <AiOutlineSearch className=" w-5 text-white" />
+              <AiOutlineSearch className="w-5 text-white" />
             </button>
           </form>
         </div>
         {/* searchbar */}
-        <div className="absolute right-4 inset-y-0 flex items-center gap-3">
+        <div className="flex items-center justify-start gap-6">
           <Menu as="div" className="relative ml-3">
             <MenuButton className="flex rounded-full bg-gray-800 text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
               <span className="absolute -inset-1.5" />
