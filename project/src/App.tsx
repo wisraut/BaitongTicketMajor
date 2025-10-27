@@ -1,7 +1,7 @@
-import BaiTongTicketPage from "./page/BaiTongTicketPage";
+import Home from "./page/Home";
 
 function App() {
-  return <BaiTongTicketPage />;
+  return <Home/>;
 }
 
 export default App;
