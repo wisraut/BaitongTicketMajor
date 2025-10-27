@@ -7,13 +7,14 @@ import {
   MenuButton,
   MenuItem,
   MenuItems,
-} from "@headlessui/react"; //ลงheroicon และ import library
+} from "@headlessui/react"; //ลงheroicon และ import library             npm install @heroicons/react
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { AiOutlineSearch } from "react-icons/ai";
+import { ShoppingCartIcon } from "@heroicons/react/24/outline"; //      npm install @heroicons/react
 
 const navigation = [
-  { name: "ทุกการแสดง", href: "#", current: false },
-  { name: "GiftShop", href: "#", current: true },
+  { name: "ทุกการแสดง", href: "#", current: true },
+  { name: "GiftShop", href: "#", current: false },
   { name: "Promotions", href: "#", current: false },
 ];
 
@@ -78,7 +79,7 @@ export default function Header() {
           </div>
         </div>
         {/* searchbar */}
-        <div className="hidden sm:flex items-center ml-6">
+        <div className="hidden sm:flex items-center ml-2">
           <form className="relative">
             <input
               type="search"
@@ -96,8 +97,24 @@ export default function Header() {
             </button>
           </form>
         </div>
+
+        {/* shoppingcart */}
+        <div className="hidden sm:flex items-center sm:ml-6">
+          <button
+            type="button"
+            className="relative p-2 rounded-full bg-cyan-800 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Shopping Cart"
+          >
+            <ShoppingCartIcon className="w-6 text-white" />
+            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+              3
+            </span>
+          </button>
+        </div>
+        {/* shoppingcart */}
+
         {/* searchbar */}
-        <div className="flex items-center justify-start gap-6">
+        <div className="absolute right-8 inset-y-0 flex items-center gap-4 sm:static sm:inset-auto sm:ml-2 sm:pr-4">
           <Menu as="div" className="relative ml-3">
             <MenuButton className="flex rounded-full bg-[#234C6A] text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
               <span className="absolute -inset-1.5" />
