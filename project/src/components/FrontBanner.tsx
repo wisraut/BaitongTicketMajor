@@ -14,9 +14,9 @@ export type Slide = {
 
 /** พร็อพของคอมโพเนนต์ */
 type Props = {
-  slides: Slide[]; // รายการสไลด์
+  slides: Slide[]; 
   layout?: "full" | "contained";
-  autoPlayMs?: number; // เวลาเปลี่ยนภาพอัตโนมัติ (ms) default = 4000
+  autoPlayMs?: number; 
 };
 
 export default function FrontBanner({ slides, layout = "contained", autoPlayMs = 4000 }: Props) {
@@ -69,7 +69,7 @@ export default function FrontBanner({ slides, layout = "contained", autoPlayMs =
 
   return (
     <section
-      className={`relative select-none ${layout === "full" ? "w-screen left-1/2 -translate-x-1/2" : "w-full"}`}
+      className={`relative select-none ${layout === "full" ? "w-screen left-1/2 -translate-x-1/2" : "w-full" }`}
       aria-roledescription="carousel"
       onMouseEnter={stop}
       onMouseLeave={start}

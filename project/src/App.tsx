@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import Header from "./components/Header";
+import Topbar from "./components/Topbar";
 import Footer from "./components/Footer";
 import FrontBanner, { type Slide } from "./components/FrontBanner";
 
@@ -13,7 +13,7 @@ const slides: Slide[] = [
 function App() {
   return (
     <div className="App">
-      <Header />
+      <Topbar />
       <main className="flex-1 bg-white text-black">
         <FrontBanner slides={slides} autoPlayMs={4500} />
         <h1>HOME</h1>
@@ -48,7 +48,7 @@ function App() {
         <h1>HOME</h1>
         <h1>HOME</h1>
 
-        
+
       </main>
       <Footer />
     </div>
