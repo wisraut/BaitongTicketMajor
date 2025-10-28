@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
-/** โครงข้อมูลสไลด์ */
+/* โครงข้อมูลสไลด์ */
 export type Slide = {
   id: number;
   imageUrl: string;
@@ -127,3 +127,5 @@ export default function FrontBanner({ slides, autoPlayMs = 4000 }: Props) {
     </section>
   );
 }
+
+
