@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.css";
-import Topbar from "./components/Topbar";
+import Topbar from "./components/Header";
 import Footer from "./components/Footer";
 import FrontBanner, { type Slide } from "./components/FrontBanner";
 

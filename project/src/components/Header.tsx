@@ -1,181 +1,202 @@
-import React from "react";
-import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-} from "@headlessui/react"; //ลงheroicon และ import library             npm install @heroicons/react
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
-import { AiOutlineSearch } from "react-icons/ai";
-import { ShoppingCartIcon } from "@heroicons/react/24/outline"; //      npm install @heroicons/react
+// src/components/Header.tsx
+import { useEffect, useRef, useState } from "react";
+import { ShoppingCart, User, Menu, ChevronDown, X, Search } from "lucide-react";
+import logo from "/logo.png";
 
-const navigation = [
-  { name: "ทุกการแสดง", href: "#", current: true },
-  { name: "GiftShop", href: "#", current: false },
-  { name: "Promotions", href: "#", current: false },
-];
 
-function classNames(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
+// เมนูหลักและเมนูย่อย
+const MENU_KEYS = ["events", "giftshop", "promo"] as const;
+type MenuKeyStrict = typeof MENU_KEYS[number]; 
+type MenuKey = MenuKeyStrict | null;      
 
-export default function Header() {
+const MENU_SECTIONS: Record<MenuKeyStrict, string[]> = {
+  events: ["Concerts", "Sports", "Performing Arts"],
+  giftshop: ["T-Shirts","Merch Bundles"],
+  promo: ["Flash Sale", "Season Pass"],
+};
+
+
+const DesktopDrop: React.FC<{
+  label: string;
+  openKey: MenuKey;
+  me: MenuKeyStrict;
+  setOpen: (k: MenuKey) => void;
+}> = ({ label, openKey, me, setOpen }) => {
+  const isOpen = openKey === me;
+  const items = MENU_SECTIONS[me];
+
   return (
-    // nav bar
-    <Disclosure
-      as="nav"
-      className="fixed inset-x-0 top-0 z-50 w-full bg-[#234C6A]"
-    >
-      <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8"></div>
-      <div className="relative flex h-20 items-center justify-between">
-        <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
-          <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-white/5 hover:text-white focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-500">
-            <span className="absolute -inset-0.5" />
-            <span className="sr-only"> Open main menu </span>
-            <Bars3Icon
-              aria-hidden="true"
-              className="block size-6 group-data-open:hidden"
-            />
-            <XMarkIcon
-              aria-hidden="true"
-              className="hidden size-6 group-data-open:block"
-            />
-          </DisclosureButton>
-        </div>
-        {/* nav bar*/}
+    <div className="relative" onMouseEnter={() => setOpen(me)}>
+      <button
+        type="button"
+        onClick={() => setOpen(isOpen ? null : me)}
+        className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition
+        ${isOpen ? "bg-white/10 text-white ring-1 ring-white/20" : "text-white/90 hover:bg-white/10"}`}
+      >
+        {label}
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+      </button>
 
-        {/* logo */}
-        <div className="flex flex-1 items-center justify-start gap-6">
-          <div className="flex shrink-0 items-center">
-            <img
-              src="/logo.png"
-              alt="BaiTongTicketLogo"
-              className="h-16 w-auto sm:h-20 md:h-24"
-            />
-          </div>
-          {/* logo */}
-
-          <div className="hidden sm:block">
-            <div className="flex space-x-4">
-              {navigation.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  aria-current={item.current ? "page" : undefined}
-                  className={classNames(
-                    item.current
-                      ? "bg-gray-900 text-white dark:bg-gray-950/50"
-                      : "text-gray-300 hover:bg-white/5 hover:text-white",
-                    "rounded-md px-3 py-2 text-sm font-medium"
-                  )}
-                >
-                  {item.name}
-                </a>
-              ))}
-            </div>
+      {isOpen && (
+        <div className="absolute left-0 z-50 mt-2 w-56 rounded-xl border border-white/10 bg-slate-800 p-2 shadow-xl">
+          <div className="max-h-[60vh] overflow-y-auto pr-1">
+            {items.map((x) => (
+              <a
+                key={x}
+                href="#"
+                className="block rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white"
+                onClick={() => setOpen(null)}
+              >
+                {x}
+              </a>
+            ))}
           </div>
         </div>
-        {/* searchbar */}
-        <div className="hidden sm:flex items-center ml-2">
-          <form className="relative">
+      )}
+    </div>
+  );
+};
+
+// =============== HEADER ===============
+export default function Header() {
+  const [openMenu, setOpenMenu] = useState<MenuKey>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (navRef.current && !navRef.current.contains(t)) setOpenMenu(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenMenu(null);
+        setMobileOpen(false);
+      }
+    };
+    const onScroll = () => setOpenMenu(null);
+
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileOpen]);
+
+  const goHome = () => (window.location.href = "/");
+
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 w-full bg-[#234C6A] text-white shadow-md">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+        <div className="flex items-center gap-6">
+          <button
+            type="button"
+            onClick={goHome}
+            className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"          >
+            <img src="./logo.png" alt="BaiTongTicket" className="block w-auto max-h-12 sm:max-h-20 md:max-h-20" />
+          </button>
+
+          <nav ref={navRef} className="hidden lg:flex items-center gap-2">
+            <DesktopDrop label="ทุกงานแสดง" openKey={openMenu} me="events" setOpen={setOpenMenu} />
+            <DesktopDrop label="GiftShop" openKey={openMenu} me="giftshop" setOpen={setOpenMenu} />
+            <DesktopDrop label="Promo" openKey={openMenu} me="promo" setOpen={setOpenMenu} />
+          </nav>
+        </div>
+
+        {/* right: search + help + cart link + login + hamburger */}
+        <div className="flex items-center gap-3">
+          <form className="relative hidden md:block">
             <input
               type="search"
-              name="q"
-              aria-label="Search"
-              placeholder="ค้นหา..."
-              className="w-56 rounded-full bg-cyan-800 opacity-40 px-4 py-2 pr-10 text-sm text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="ค้นหา…"
+              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70
+                         text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
             />
             <button
               type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 p-1 rounded-full  bg-cyan-800 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              aria-label="Submit search"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 hover:bg-white/10"
+              aria-label="Search"
             >
-              <AiOutlineSearch className="w-5 text-white" />
+              <Search className="h-5 w-5" />
             </button>
           </form>
-        </div>
 
-        {/* shoppingcart */}
-        <div className="hidden sm:flex items-center sm:ml-6">
-          <button
-            type="button"
-            className="relative p-2 rounded-full bg-cyan-800 hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            aria-label="Shopping Cart"
+          <a href="#" className="hidden lg:inline text-sm text-white/90 hover:text-white">
+            ช่วยเหลือ
+          </a>
+
+          {/* cart (link to page) */}
+          <a href="/cart" aria-label="Cart" className="rounded-full p-2 hover:bg-white/10">
+            <ShoppingCart className="h-5 w-5" />
+          </a>
+
+          <a
+            href="#"
+            className="hidden lg:flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
           >
-            <ShoppingCartIcon className="w-6 text-white" />
-            <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-              3
-            </span>
+            <User className="h-4 w-4" /> Register / login
+          </a>
+
+          <button
+            className="rounded-md p-2 hover:bg-white/10 lg:hidden"
+            aria-label="Toggle menu"
+            aria-expanded={mobileOpen}
+            onClick={() => {
+              setOpenMenu(null);
+              setMobileOpen((v) => !v);
+            }}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
-        {/* shoppingcart */}
+      </div>
 
-        {/* searchbar */}
-        <div className="absolute right-8 inset-y-0 flex items-center gap-4 sm:static sm:inset-auto sm:ml-2 sm:pr-4">
-          <Menu as="div" className="relative ml-3">
-            <MenuButton className="flex rounded-full bg-[#234C6A] text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500">
-              <span className="absolute -inset-1.5" />
-              <span className="sr-only">Open user menu</span>
-              <img
-                src="/profile.jpg"
-                className="size-8 rounded-full bg-gray-800 outline -outline-offset-1 outline-white/10"
-              />
-            </MenuButton>
+      {/* MOBILE MENU*/}
+      <div
+        className={`lg:hidden border-t border-white/10 bg-[#234C6A] shadow-lg
+                    transition-[max-height,opacity] duration-300 ease-out overflow-hidden
+                    ${mobileOpen ? "max-h-[70vh] opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
+          {MENU_KEYS.map((key) => (
+            <div key={key}>
+              <p className="mb-1 text-sm font-semibold text-white/80">
+                {key === "events" ? "ทุกงานแสดง" : key === "giftshop" ? "GiftShop" : "Promo"}
+              </p>
+              {MENU_SECTIONS[key].map((x) => (
+                <a
+                  key={`${key}-${x}`}
+                  href="#"
+                  className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {x}
+                </a>
+              ))}
+            </div>
+          ))}
 
-            <MenuItems
-              transition
-              className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+          <div className="pt-2">
+            <a
+              href="#"
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
+              onClick={() => setMobileOpen(false)}
             >
-              <a
-                href="#"
-                className="block px-4 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden dark:text-gray-800 dark:data-focus:bg-white/5"
-              >
-                Your Profile
-              </a>
-
-              <MenuItem>
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden dark:text-gray-800 dark:data-focus:bg-white/5"
-                >
-                  Settings
-                </a>
-              </MenuItem>
-              <MenuItem>
-                <a
-                  href="#"
-                  className="block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden dark:text-gray-800 dark:data-focus:bg-white/5"
-                >
-                  Sign out
-                </a>
-              </MenuItem>
-            </MenuItems>
-          </Menu>
+              <User className="h-4 w-4" /> Register / login
+            </a>
+          </div>
         </div>
       </div>
-      <DisclosurePanel className="sm:hidden">
-        <div className="space-y-1 px-2 pt-2 pb-3">
-          {navigation.map((item) => (
-            <DisclosureButton
-              key={item.name}
-              as="a"
-              href={item.href}
-              aira-current={item.current ? "page" : undefined}
-              className={classNames(
-                item.current
-                  ? "bg-gray-900 text-white dark:bg-gray-950/50"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white",
-                "block rounded-md px-3 py-2 text-base font-medium"
-              )}
-            >
-              {item.name}
-            </DisclosureButton>
-          ))}
-        </div>
-      </DisclosurePanel>
-    </Disclosure>
+    </header>
   );
 }
