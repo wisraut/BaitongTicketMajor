@@ -1,9 +1,16 @@
-import TopBar from "../components/TopBar";
+import Header from "../components/Header";
 import Banner from "../components/Banner";
 import Section from "../components/Section";
 import Pagination from "../components/Pagination";
 import Footer from "../components/Footer";
 import type { EventItem } from "../components/EventCard";
+import FrontBanner, { type Slide } from "../components/FrontBanner";
+
+const slides: Slide[] = [
+  { id: 1, imageUrl: "/ball.jpg", href: "#", title: "บอลสุดมันเเซ่บๆ!" },
+  { id: 2, imageUrl: "/concert.png", href: "#", title: "คอนเสริทสุดจําบจ๊วบๆ" },
+  { id: 3, imageUrl: "/shirt.jpg", href: "#",  title: "เสื้อบอลโครตรเฟี้ยวโครตเท่!" },
+]
 
 const recommended: EventItem[] = Array.from({ length: 8 }).map((_, i) => ({
   id: i + 1,
@@ -30,9 +37,9 @@ const newEvents: EventItem[] = Array.from({ length: 12 }).map((_, i) => ({
 export default function BaiTongTicketPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900">
-      <TopBar />
+      <Header />
       <main>
-        <Banner />
+        <FrontBanner slides={slides} autoPlayMs={4500}/>
         <Section title="Recommended Events" items={recommended} />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
