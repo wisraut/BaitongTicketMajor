@@ -1,4 +1,4 @@
-import TopBar from "../components/TopBar";
+import TopBar from "../components/Header";
 import Banner from "../components/Banner";
 import Section from "../components/Section";
 import Pagination from "../components/Pagination";
