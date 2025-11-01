@@ -1,5 +1,6 @@
 import React from "react";
-import ProductCard, { Product } from "./ProductCard";
+import ProductCard from "./ProductCard";
+import type { Product } from "./ProductCard";
 
 const SectionGrid: React.FC<{ title: string; items: Product[] }> = ({ title, items }) => {
   return (

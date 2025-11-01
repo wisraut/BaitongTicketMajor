@@ -1,8 +1,6 @@
 // src/components/Header.tsx
 import { useEffect, useRef, useState } from "react";
 import { ShoppingCart, User, Menu, ChevronDown, X, Search } from "lucide-react";
-import logo from "/logo.png";
-
 
 // เมนูหลักและเมนูย่อย
 const MENU_KEYS = ["events", "giftshop", "promo"] as const;
