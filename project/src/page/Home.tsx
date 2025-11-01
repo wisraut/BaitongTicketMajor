@@ -1,9 +1,9 @@
-import TopBar from "../components/Header";
-import Banner from "../components/Banner";
-import Section from "../components/Section";
-import Pagination from "../components/Pagination";
-import Footer from "../components/Footer";
-import type { EventItem } from "../components/EventCard";
+import TopBar from "../components/home/Header";
+import Banner from "../components/home/Banner";
+import Section from "../components/home/Section";
+import Pagination from "../components/home/Pagination";
+import Footer from "../components/home/Footer";
+import type { EventItem } from "../components/home/EventCard";
 
 const recommended: EventItem[] = Array.from({ length: 8 }).map((_, i) => ({
   id: i + 1,
