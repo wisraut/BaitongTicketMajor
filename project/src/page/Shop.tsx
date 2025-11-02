@@ -48,7 +48,7 @@ const ShopPage: React.FC = () => {
     {/* Header เดิม */}
     <Header />
         <div className="pt-4">
-            <AutoBanner slides={slides} interval={4000} aspect="16/6" contained rounded="rounded-xl" />
+            <AutoBanner slides={slides} interval={4000} aspect="16/5" contained rounded="rounded-xl" />
         </div>
         {/* Sections */}
         <SectionGrid title="New Arrivals" items={newArrivals} />

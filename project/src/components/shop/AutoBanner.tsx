@@ -19,7 +19,7 @@ type Props = {
 const AutoBanner: React.FC<Props> = ({
   slides,
   interval = 4000,
-  aspect = "16/6",
+  aspect = "16/5",          // ✅ เตี้ยลงโดยค่าเริ่มต้น
   contained = true,
   rounded = "rounded-2xl",
   pauseOnHover = true,
@@ -28,25 +28,14 @@ const AutoBanner: React.FC<Props> = ({
   const [paused, setPaused] = useState(false);
   const max = slides.length;
 
-  // เดินหน้า/ถอยหลัง/ไป index เป้าหมาย (ทำให้ stable ด้วย useCallback)
   const go = useCallback(
     (i: number) => setIndex(() => (((i % max) + max) % max)),
     [max]
   );
+  const nextSlide = useCallback(() => setIndex((i) => (i + 1) % max), [max]);
+  const prevSlide = useCallback(() => setIndex((i) => (i - 1 + max) % max), [max]);
 
-  const nextSlide = useCallback(
-    () => setIndex((i) => (i + 1) % max),
-    [max]
-  );
-
-  const prevSlide = useCallback(
-    () => setIndex((i) => (i - 1 + max) % max),
-    [max]
-  );
-
-  // เล่นอัตโนมัติด้วย setInterval (เก็บ id ไว้ใน ref เพื่อ cleanup)
   const intervalRef = useRef<number | null>(null);
-
   useEffect(() => {
     if (max <= 1 || paused) return;
     intervalRef.current = window.setInterval(nextSlide, interval);
@@ -59,9 +48,7 @@ const AutoBanner: React.FC<Props> = ({
     () =>
       contained
         ? ({ children }: { children: React.ReactNode }) => (
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-              {children}
-            </div>
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
           )
         : ({ children }: { children: React.ReactNode }) => <>{children}</>,
     [contained]
@@ -81,11 +68,11 @@ const AutoBanner: React.FC<Props> = ({
         >
           {slides.map((s, i) => (
             <a key={i} href={s.href ?? "#"} className="block w-full shrink-0">
-              <div className={`w-full aspect-[${aspect}]`}>
+              <div className={`w-full aspect-[${aspect}] max-h-[480px]`}>
                 <img
                   src={s.src}
                   alt={s.alt ?? ""}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover object-center"
                   loading="eager"
                 />
               </div>
