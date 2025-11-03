@@ -1,7 +1,7 @@
-import Shop from "./page/Shop";
+import Login from "./page/Login";
 
 function App() {
-  return <Shop/>;
+  return <Login/>;
 }
 
 export default App;

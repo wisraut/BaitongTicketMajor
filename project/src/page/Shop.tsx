@@ -4,7 +4,26 @@ import Footer from "../components/home/Footer";
 import Pagination from "../components/home/Pagination";
 import SectionGrid from "../components/shop/SectionGrid";
 import type { Product } from "../components/shop/ProductCard";
-import AutoBanner from "../components/shop/AutoBanner";
+import FrontBanner from "../components/home/FrontBanner";
+
+// สไลด์สำหรับ FrontBanner (ต้องส่ง props นี้)
+const slides = [
+  {
+    id: 1,
+    imageUrl:
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1400&auto=format&fit=crop",
+  },
+  {
+    id: 2,
+    imageUrl:
+      "https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?q=80&w=1400&auto=format&fit=crop",
+  },
+  {
+    id: 3,
+    imageUrl:
+      "https://images.unsplash.com/photo-1507878866276-a947ef722fee?q=80&w=1400&auto=format&fit=crop",
+  },
+];
 
 // ตัวอย่างข้อมูล (เปลี่ยนเป็นข้อมูลจริงได้)
 const img = (seed: string) =>
@@ -36,20 +55,12 @@ const newEvents: Product[] = [
   { id: "ne10", title: "The Strokes – Room on Fire", price: 1000, img: img("20") },
 ];
 
-const slides = [
-  { src: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1400&auto=format&fit=crop", alt: "Concert 1" },
-  { src: "https://images.unsplash.com/photo-1507878866276-a947ef722fee?q=80&w=1400&auto=format&fit=crop", alt: "Concert 2" },
-  { src: "https://images.unsplash.com/photo-1464375117522-1311d6a5b81b?q=80&w=1400&auto=format&fit=crop", alt: "Concert 3" },
-];
-
 const ShopPage: React.FC = () => {
   return (
     <div className="min-h-screen w-full bg-slate-50">
-    {/* Header เดิม */}
+    {/* Header เดิม */} 
     <Header />
-        <div className="pt-4">
-            <AutoBanner slides={slides} interval={4000} aspect="16/5" contained rounded="rounded-xl" />
-        </div>
+        <FrontBanner slides={slides} />
         {/* Sections */}
         <SectionGrid title="New Arrivals" items={newArrivals} />
         <SectionGrid title="New Events" items={newEvents} />
