@@ -1,9 +1,7 @@
-// src/components/Header.tsx
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, User, Menu, ChevronDown, X, Search } from "lucide-react";
 
-// เมนูหลักและเมนูย่อย
 const MENU_KEYS = ["events", "giftshop", "promo"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
@@ -14,8 +12,7 @@ const MENU_SECTIONS: Record<MenuKeyStrict, string[]> = {
   promo: ["Flash Sale", "Season Pass"],
 };
 
-// helper แปลงชื่อเมนูย่อยให้เป็น path คร่าว ๆ
-const subPath = (group: MenuKeyStrict, item: string) => {
+const subPath = (group: MenuKeyStrict) => {
   switch (group) {
     case "events":
       return "/events";
@@ -23,8 +20,6 @@ const subPath = (group: MenuKeyStrict, item: string) => {
       return "/shop";
     case "promo":
       return "/promo";
-    default:
-      return "/";
   }
 };
 
@@ -43,16 +38,10 @@ const DesktopDrop: React.FC<{
         type="button"
         onClick={() => setOpen(isOpen ? null : me)}
         className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition
-        ${
-          isOpen
-            ? "bg-white/10 text-white ring-1 ring-white/20"
-            : "text-white/90 hover:bg-white/10"
-        }`}
+        ${isOpen ? "bg-white/10 text-white ring-1 ring-white/20" : "text-white/90 hover:bg-white/10"}`}
       >
         {label}
-        <ChevronDown
-          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
       </button>
 
       {isOpen && (
@@ -61,7 +50,7 @@ const DesktopDrop: React.FC<{
             {items.map((x) => (
               <Link
                 key={x}
-                to={subPath(me, x)}
+                to={subPath(me)}
                 className="block rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white"
                 onClick={() => setOpen(null)}
               >
@@ -75,7 +64,6 @@ const DesktopDrop: React.FC<{
   );
 };
 
-// =============== HEADER ===============
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<MenuKey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -83,8 +71,9 @@ export default function Header() {
 
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (navRef.current && !navRef.current.contains(t)) setOpenMenu(null);
+      if (navRef.current && !navRef.current.contains(e.target as Node)) {
+        setOpenMenu(null);
+      }
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -92,15 +81,11 @@ export default function Header() {
         setMobileOpen(false);
       }
     };
-    const onScroll = () => setOpenMenu(null);
-
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
-    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       document.removeEventListener("mousedown", onDocClick);
       document.removeEventListener("keydown", onKey);
-      window.removeEventListener("scroll", onScroll);
     };
   }, []);
 
@@ -112,10 +97,10 @@ export default function Header() {
   }, [mobileOpen]);
 
   return (
-    <header className="flex inset-x-0 w-full bg-[#234C6A] text-white shadow-md">
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 w-full">
+    <header className="relative z-50 w-full bg-[#234C6A] text-white shadow-md">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+        {/* left */}
         <div className="flex items-center gap-6">
-          {/* โลโก้ → กลับ home */}
           <Link
             to="/"
             className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
@@ -127,60 +112,37 @@ export default function Header() {
             />
           </Link>
 
-          {/* desktop nav */}
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">
-            <DesktopDrop
-              label="ทุกงานแสดง"
-              openKey={openMenu}
-              me="events"
-              setOpen={setOpenMenu}
-            />
-            <DesktopDrop
-              label="GiftShop"
-              openKey={openMenu}
-              me="giftshop"
-              setOpen={setOpenMenu}
-            />
-            <DesktopDrop
-              label="Promo"
-              openKey={openMenu}
-              me="promo"
-              setOpen={setOpenMenu}
-            />
+            <DesktopDrop label="ทุกงานแสดง" openKey={openMenu} me="events" setOpen={setOpenMenu} />
+            <DesktopDrop label="GiftShop" openKey={openMenu} me="giftshop" setOpen={setOpenMenu} />
+            <DesktopDrop label="Promo" openKey={openMenu} me="promo" setOpen={setOpenMenu} />
           </nav>
         </div>
 
-        {/* right: search + help + cart link + login + hamburger */}
+        {/* right */}
         <div className="flex items-center gap-3">
           <form className="relative hidden md:block">
             <input
               type="search"
               placeholder="ค้นหา…"
-              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70
-                         text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
+              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70 text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
             />
             <button
               type="submit"
               className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 hover:bg-white/10"
-              aria-label="Search"
             >
               <Search className="h-5 w-5" />
             </button>
           </form>
 
-          <Link
-            to="/help"
-            className="hidden lg:inline text-sm text-white/90 hover:text-white"
-          >
+          <Link to="/help" className="hidden lg:inline text-sm text-white/90 hover:text-white">
             ช่วยเหลือ
           </Link>
 
-          {/* cart */}
-          <Link to="/cart" aria-label="Cart" className="rounded-full p-2 hover:bg-white/10">
+          <Link to="/cart" className="rounded-full p-2 hover:bg-white/10">
             <ShoppingCart className="h-5 w-5" />
           </Link>
 
-          {/* login */}
           <Link
             to="/login"
             className="hidden lg:flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
@@ -188,11 +150,8 @@ export default function Header() {
             <User className="h-4 w-4" /> Register / login
           </Link>
 
-          {/* mobile btn */}
           <button
             className="rounded-md p-2 hover:bg-white/10 lg:hidden"
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
             onClick={() => {
               setOpenMenu(null);
               setMobileOpen((v) => !v);
@@ -203,46 +162,93 @@ export default function Header() {
         </div>
       </div>
 
-      {/* MOBILE MENU*/}
-      <div
-        className={`lg:hidden border-t border-white/10 bg-[#234C6A] shadow-lg
-                    transition-[max-height,opacity] duration-300 ease-out overflow-hidden
-                    ${mobileOpen ? "max-h-[70vh] opacity-100" : "max-h-0 opacity-0"}`}
-      >
-        <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
-          {MENU_KEYS.map((key) => (
-            <div key={key}>
-              <p className="mb-1 text-sm font-semibold text-white/80">
-                {key === "events"
-                  ? "ทุกงานแสดง"
-                  : key === "giftshop"
-                  ? "GiftShop"
-                  : "Promo"}
-              </p>
-              {MENU_SECTIONS[key].map((x) => (
-                <Link
-                  key={`${key}-${x}`}
-                  to={subPath(key, x)}
-                  className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {x}
-                </Link>
-              ))}
-            </div>
-          ))}
+      {/* ===== Mobile Menu Overlay ===== */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[999] lg:hidden">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setMobileOpen(false)}
+          />
 
-          <div className="pt-2">
-            <Link
-              to="/login"
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-              onClick={() => setMobileOpen(false)}
-            >
-              <User className="h-4 w-4" /> Register / login
-            </Link>
+          {/* panel */}
+          <div className="absolute right-0 top-0 h-full w-[78%] max-w-[320px] bg-[#234C6A] shadow-2xl rounded-l-[32px] overflow-y-auto">
+            {/* header in panel */}
+            <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/10">
+              <p className="text-base font-semibold text-white">เมนู</p>
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="rounded-full p-1.5 hover:bg-white/10"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-6">
+              {/* sections */}
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-white/60 mb-2">ทุกงานแสดง</p>
+                <div className="space-y-1">
+                  {MENU_SECTIONS.events.map((x) => (
+                    <Link
+                      key={x}
+                      to="/events"
+                      className="block rounded-lg px-3 py-2 text-sm text-white/95 hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {x}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-white/60 mb-2">GiftShop</p>
+                <div className="space-y-1">
+                  {MENU_SECTIONS.giftshop.map((x) => (
+                    <Link
+                      key={x}
+                      to="/shop"
+                      className="block rounded-lg px-3 py-2 text-sm text-white/95 hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {x}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold tracking-wide text-white/60 mb-2">Promo</p>
+                <div className="space-y-1">
+                  {MENU_SECTIONS.promo.map((x) => (
+                    <Link
+                      key={x}
+                      to="/promo"
+                      className="block rounded-lg px-3 py-2 text-sm text-white/95 hover:bg-white/10"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {x}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* bottom btn */}
+              <div className="pt-2 pb-6">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 rounded-full border border-white/25 bg-white/5 px-4 py-2 text-sm text-white hover:bg-white/10"
+                >
+                  <User className="h-4 w-4" />
+                  Register / login
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </header>
   );
 }
