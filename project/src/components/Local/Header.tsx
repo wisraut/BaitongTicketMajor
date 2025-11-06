@@ -94,14 +94,14 @@ export default function Header() {
   const goHome = () => (window.location.href = "/");
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 w-full bg-[#234C6A] text-white shadow-md">
+    <header className="flex inset-x-0 w-full bg-[#234C6A] text-white shadow-md">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
         <div className="flex items-center gap-6">
           <button
             type="button"
             onClick={goHome}
-            className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"          >
-            <img src="./logo.png" alt="BaiTongTicket" className="block w-auto max-h-12 sm:max-h-20 md:max-h-20" />
+            className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
+            <img src="./logo.png" alt="BaiTongTicket" className="block w-auto max-h-12 sm:max-h-20 md:max-h-20"/>
           </button>
 
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">

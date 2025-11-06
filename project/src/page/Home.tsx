@@ -1,7 +1,7 @@
-import TopBar from "../components/home/Header";
-import Section from "../components/home/Section";
-import Pagination from "../components/home/Pagination";
-import Footer from "../components/home/Footer";
+import TopBar from "../components/Local/Header";
+import Section from "../components/Local/Section";
+import Pagination from "../components/Local/Pagination";
+import Footer from "../components/Local/Footer";
 import type { EventItem } from "../components/home/EventCard";
 import FrontBanner from "../components/home/FrontBanner";
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Header from "../components/home/Header";
-import Footer from "../components/home/Footer";
+import Header from "../components/Local/Header";
+import Footer from "../components/Local/Footer";
 
 const LoginRegisterPage: React.FC = () => {
   const [mode, setMode] = useState<"login" | "register">("login");

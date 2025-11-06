@@ -1,5 +1,5 @@
-import EventCard from "./EventCard";
-import type { EventItem } from "./EventCard";
+import EventCard from "../home/EventCard";
+import type { EventItem } from "../home/EventCard";
 
 const Section: React.FC<{ title: string; items: EventItem[] }> = ({ title, items }) => (
   <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">

@@ -1,7 +1,7 @@
 import React from "react";
-import Header from "../components/home/Header";
-import Footer from "../components/home/Footer";
-import Pagination from "../components/home/Pagination";
+import Header from "../components/Local/Header";
+import Footer from "../components/Local/Footer";
+import Pagination from "../components/Local/Pagination";
 import SectionGrid from "../components/shop/SectionGrid";
 import type { Product } from "../components/shop/ProductCard";
 import FrontBanner from "../components/home/FrontBanner";
