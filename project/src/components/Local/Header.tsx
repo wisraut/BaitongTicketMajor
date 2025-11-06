@@ -1,18 +1,32 @@
 // src/components/Header.tsx
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { ShoppingCart, User, Menu, ChevronDown, X, Search } from "lucide-react";
 
 // เมนูหลักและเมนูย่อย
 const MENU_KEYS = ["events", "giftshop", "promo"] as const;
-type MenuKeyStrict = typeof MENU_KEYS[number]; 
-type MenuKey = MenuKeyStrict | null;      
+type MenuKeyStrict = (typeof MENU_KEYS)[number];
+type MenuKey = MenuKeyStrict | null;
 
 const MENU_SECTIONS: Record<MenuKeyStrict, string[]> = {
   events: ["Concerts", "Sports", "Performing Arts"],
-  giftshop: ["T-Shirts","Merch Bundles"],
+  giftshop: ["T-Shirts", "Merch Bundles"],
   promo: ["Flash Sale", "Season Pass"],
 };
 
+// helper แปลงชื่อเมนูย่อยให้เป็น path คร่าว ๆ
+const subPath = (group: MenuKeyStrict, item: string) => {
+  switch (group) {
+    case "events":
+      return "/events";
+    case "giftshop":
+      return "/shop";
+    case "promo":
+      return "/promo";
+    default:
+      return "/";
+  }
+};
 
 const DesktopDrop: React.FC<{
   label: string;
@@ -29,24 +43,30 @@ const DesktopDrop: React.FC<{
         type="button"
         onClick={() => setOpen(isOpen ? null : me)}
         className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm transition
-        ${isOpen ? "bg-white/10 text-white ring-1 ring-white/20" : "text-white/90 hover:bg-white/10"}`}
+        ${
+          isOpen
+            ? "bg-white/10 text-white ring-1 ring-white/20"
+            : "text-white/90 hover:bg-white/10"
+        }`}
       >
         {label}
-        <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
       </button>
 
       {isOpen && (
         <div className="absolute left-0 z-50 mt-2 w-56 rounded-xl border border-white/10 bg-slate-800 p-2 shadow-xl">
           <div className="max-h-[60vh] overflow-y-auto pr-1">
             {items.map((x) => (
-              <a
+              <Link
                 key={x}
-                href="#"
+                to={subPath(me, x)}
                 className="block rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white"
                 onClick={() => setOpen(null)}
               >
                 {x}
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -91,23 +111,42 @@ export default function Header() {
     };
   }, [mobileOpen]);
 
-  const goHome = () => (window.location.href = "/");
-
   return (
     <header className="flex inset-x-0 w-full bg-[#234C6A] text-white shadow-md">
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 w-full">
         <div className="flex items-center gap-6">
-          <button
-            type="button"
-            onClick={goHome}
-            className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70">
-            <img src="./logo.png" alt="BaiTongTicket" className="block w-auto max-h-12 sm:max-h-20 md:max-h-20"/>
-          </button>
+          {/* โลโก้ → กลับ home */}
+          <Link
+            to="/"
+            className="rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/70"
+          >
+            <img
+              src="./logo.png"
+              alt="BaiTongTicket"
+              className="block w-auto max-h-12 sm:max-h-20 md:max-h-20"
+            />
+          </Link>
 
+          {/* desktop nav */}
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">
-            <DesktopDrop label="ทุกงานแสดง" openKey={openMenu} me="events" setOpen={setOpenMenu} />
-            <DesktopDrop label="GiftShop" openKey={openMenu} me="giftshop" setOpen={setOpenMenu} />
-            <DesktopDrop label="Promo" openKey={openMenu} me="promo" setOpen={setOpenMenu} />
+            <DesktopDrop
+              label="ทุกงานแสดง"
+              openKey={openMenu}
+              me="events"
+              setOpen={setOpenMenu}
+            />
+            <DesktopDrop
+              label="GiftShop"
+              openKey={openMenu}
+              me="giftshop"
+              setOpen={setOpenMenu}
+            />
+            <DesktopDrop
+              label="Promo"
+              openKey={openMenu}
+              me="promo"
+              setOpen={setOpenMenu}
+            />
           </nav>
         </div>
 
@@ -129,22 +168,27 @@ export default function Header() {
             </button>
           </form>
 
-          <a href="#" className="hidden lg:inline text-sm text-white/90 hover:text-white">
+          <Link
+            to="/help"
+            className="hidden lg:inline text-sm text-white/90 hover:text-white"
+          >
             ช่วยเหลือ
-          </a>
+          </Link>
 
-          {/* cart (link to page) */}
-          <a href="/cart" aria-label="Cart" className="rounded-full p-2 hover:bg-white/10">
+          {/* cart */}
+          <Link to="/cart" aria-label="Cart" className="rounded-full p-2 hover:bg-white/10">
             <ShoppingCart className="h-5 w-5" />
-          </a>
+          </Link>
 
-          <a
-            href="#"
+          {/* login */}
+          <Link
+            to="/login"
             className="hidden lg:flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
           >
             <User className="h-4 w-4" /> Register / login
-          </a>
+          </Link>
 
+          {/* mobile btn */}
           <button
             className="rounded-md p-2 hover:bg-white/10 lg:hidden"
             aria-label="Toggle menu"
@@ -169,29 +213,33 @@ export default function Header() {
           {MENU_KEYS.map((key) => (
             <div key={key}>
               <p className="mb-1 text-sm font-semibold text-white/80">
-                {key === "events" ? "ทุกงานแสดง" : key === "giftshop" ? "GiftShop" : "Promo"}
+                {key === "events"
+                  ? "ทุกงานแสดง"
+                  : key === "giftshop"
+                  ? "GiftShop"
+                  : "Promo"}
               </p>
               {MENU_SECTIONS[key].map((x) => (
-                <a
+                <Link
                   key={`${key}-${x}`}
-                  href="#"
+                  to={subPath(key, x)}
                   className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
                   onClick={() => setMobileOpen(false)}
                 >
                   {x}
-                </a>
+                </Link>
               ))}
             </div>
           ))}
 
           <div className="pt-2">
-            <a
-              href="#"
+            <Link
+              to="/login"
               className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
               onClick={() => setMobileOpen(false)}
             >
               <User className="h-4 w-4" /> Register / login
-            </a>
+            </Link>
           </div>
         </div>
       </div>
