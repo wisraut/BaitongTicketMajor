@@ -3,6 +3,13 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Local/Header";
 import Footer from "../components/Local/Footer";
 
+// บอกเลยว่าผู้ใช้หน้าตาเป็นแบบนี้
+type StoredUser = {
+  email: string;
+  phone?: string;
+  password: string;
+};
+
 const Login: React.FC = () => {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -12,22 +19,32 @@ const Login: React.FC = () => {
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
+  // ดึง users จาก localStorage แบบมี type
+  const getUsers = (): StoredUser[] => {
+    const raw = localStorage.getItem("users");
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw) as StoredUser[];
+    } catch {
+      return [];
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const users = getUsers();
 
-    // login ได้ด้วย email หรือเบอร์ (คุณพิมพ์ในช่องเดียวกัน)
+    // เช็กได้ทั้ง email และ phone
     const found = users.find(
-      (u: any) =>
-        (u.email === email || u.phone === email) && u.password === password
+      (u) =>
+        (u.email === email || u.phone === email) &&
+        u.password === password
     );
 
     if (found) {
-      // เก็บ user ที่ล็อกอินอยู่ (เก็บทั้ง object)
       localStorage.setItem("loggedInUser", JSON.stringify(found));
       setMessage("✅ Login สำเร็จ");
-      // เด้งไปหน้า home เลย
-      navigate("/");
+      navigate("/"); // เด้งไปหน้า home
     } else {
       setMessage("❌ ไม่พบผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
     }
@@ -35,10 +52,12 @@ const Login: React.FC = () => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    const users = JSON.parse(localStorage.getItem("users") || "[]");
+    const users = getUsers();
 
-    if (users.find((u: any) => u.email === email)) {
-      setMessage("❌ อีเมลนี้ใช้แล้ว");
+    // กัน email ซ้ำ
+    const existed = users.find((u) => u.email === email);
+    if (existed) {
+      setMessage("❌ อีเมลนี้มีในระบบแล้ว");
       return;
     }
 
@@ -47,14 +66,15 @@ const Login: React.FC = () => {
       return;
     }
 
-    const newUser = {
+    const newUser: StoredUser = {
       email,
       phone,
       password,
     };
-    users.push(newUser);
-    localStorage.setItem("users", JSON.stringify(users));
-    setMessage("✅ สมัครสำเร็จแล้ว ลองล็อกอินได้เลย");
+
+    const nextUsers: StoredUser[] = [...users, newUser];
+    localStorage.setItem("users", JSON.stringify(nextUsers));
+    setMessage("✅ สมัครสำเร็จแล้ว ลอง Login ได้เลย");
     setMode("login");
     setPassword("");
     setConfirm("");
@@ -81,24 +101,14 @@ const Login: React.FC = () => {
                 required
               />
 
-              <div>
-                <input
-                  type="password"
-                  placeholder="Password"
-                  className="w-full rounded-full bg-[#d9d9d9] px-5 py-3 text-[15px] text-slate-700 shadow-inner outline-none border border-transparent focus:border-slate-300"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <div className="flex justify-end mt-1">
-                  <button
-                    type="button"
-                    className="text-[12px] text-slate-500 hover:text-slate-700"
-                  >
-                    For got Password
-                  </button>
-                </div>
-              </div>
+              <input
+                type="password"
+                placeholder="Password"
+                className="w-full rounded-full bg-[#d9d9d9] px-5 py-3 text-[15px] text-slate-700 shadow-inner outline-none border border-transparent focus:border-slate-300"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
 
               <button
                 type="submit"

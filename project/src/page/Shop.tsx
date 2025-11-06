@@ -4,7 +4,7 @@ import Footer from "../components/Local/Footer";
 import Pagination from "../components/Local/Pagination";
 import SectionGrid from "../components/shop/SectionGrid";
 import type { Product } from "../components/shop/ProductCard";
-import FrontBanner from "../components/home/FrontBanner";
+import FrontBanner from "../components/Local/FrontBanner";
 
 // สไลด์สำหรับ FrontBanner (ต้องส่ง props นี้)
 const slides = [

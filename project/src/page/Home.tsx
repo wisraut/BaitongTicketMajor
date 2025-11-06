@@ -3,7 +3,7 @@ import Section from "../components/Local/Section";
 import Pagination from "../components/Local/Pagination";
 import Footer from "../components/Local/Footer";
 import type { EventItem } from "../components/home/EventCard";
-import FrontBanner from "../components/home/FrontBanner";
+import FrontBanner from "../components/Local/FrontBanner";
 
 // สไลด์สำหรับ FrontBanner (ต้องส่ง props นี้)
 const slides = [
