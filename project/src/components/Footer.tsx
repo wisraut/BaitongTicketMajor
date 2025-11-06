@@ -76,11 +76,6 @@ const Footer: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* bottom bar */}
-      <div className="w-full border-t bg-white py-4 text-center text-xs text-slate-500">
-        © {new Date().getFullYear()} BaiTongTicket — All rights reserved.
-      </div>
     </footer>
   );
 };

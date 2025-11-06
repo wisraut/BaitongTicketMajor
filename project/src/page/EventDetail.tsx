@@ -27,11 +27,9 @@ export default function EventDetail() {
   return (
     <>
       <Header />
-
-      <div className="min-h-screen flex flex-col bg-white">
-        {/* ส่วนบนพื้นดำ */}
+      <div className="max- min-h-screen flex flex-col bg-white">
         <div className="w-full bg-black text-white">
-          <div className="max-w-6xl mx-auto px-4 py-6 flex gap-6">
+          <div className="max-w-6xl mx-auto px-4 pt-14 pb-8 flex gap-6 items-center min-h-[180px]">
             {/* รูปโปสเตอร์ */}
             <div className="w-36 md:w-48 flex-shrink-0">
               <img
@@ -53,7 +51,7 @@ export default function EventDetail() {
               <div className="text-sm md:text-base space-y-1 mt-2">
                 <p>{event.dateRange}</p>
                 <p className="font-semibold underline underline-offset-2">
-                  สถานที่: {event.venue}
+                  {event.venue}
                 </p>
                 <p>เวลา: {event.Time}</p>
               </div>
@@ -97,8 +95,6 @@ export default function EventDetail() {
           </div>
         </div>
       </div>
-
-      <Footer />
     </>
   );
 }
