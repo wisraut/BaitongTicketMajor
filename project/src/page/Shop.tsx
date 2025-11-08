@@ -1,10 +1,10 @@
 import React from "react";
-import Header from "../components/Local/Header";
-import Footer from "../components/Local/Footer";
-import Pagination from "../components/Local/Pagination";
+import Header from "../components/useall/Header";
+import Footer from "../components/useall/Footer";
+import Pagination from "../components/useall/Pagination";
 import SectionGrid from "../components/shop/SectionGrid";
 import type { Product } from "../components/shop/ProductCard";
-import FrontBanner from "../components/Local/FrontBanner";
+import FrontBanner from "../components/useall/FrontBanner";
 
 // สไลด์สำหรับ FrontBanner (ต้องส่ง props นี้)
 const slides = [

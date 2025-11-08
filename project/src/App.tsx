@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./page/Home";
 import Shop from "./page/Shop";
-import Login from "./page/Login";
+import Login from "./page/LoginAndReg";
 import EventDetail from "./page/EventDetail";
 
 export default function App() {
