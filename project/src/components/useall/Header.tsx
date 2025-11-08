@@ -53,7 +53,9 @@ const DesktopDrop: React.FC<{
       >
         {label}
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
 
@@ -205,7 +207,7 @@ export default function Header() {
                   <User className="h-4 w-4" />
                 </div>
                 <span className="max-w-[140px] truncate">
-                  {user.email || user.phone}
+                  {user.name || user.phone}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -241,7 +243,11 @@ export default function Header() {
               setMobileOpen((v) => !v);
             }}
           >
-            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {mobileOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
           </button>
         </div>
       </div>

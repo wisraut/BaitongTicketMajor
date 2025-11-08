@@ -1,5 +1,4 @@
 import Section from "../components/useall/Section";
-import Pagination from "../components/useall/Pagination";
 import Footer from "../components/useall/Footer";
 import Header from "../components/useall/Header";
 import FrontBanner from "../components/useall/FrontBanner";
