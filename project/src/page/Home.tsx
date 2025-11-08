@@ -55,8 +55,6 @@ export default function BaiTongTicketPage() {
         </div>
 
         <Section title="Giftshop / Special" items={giftshopItems} />
-
-        <Pagination />
       </main>
       <Footer />
     </div>
