@@ -10,7 +10,7 @@ import FrontBanner from "../components/useall/FrontBanner";
 const slides = [
   { id: 1, imageUrl: "/ball.jpg" },
   { id: 2, imageUrl: "/concert.png" },
-  { id: 3, imageUrl: "/concert.png" },
+  { id: 3, imageUrl: "/shirt.jpg" },
 ];
 
 // ตัวอย่างข้อมูล (เปลี่ยนเป็นข้อมูลจริงได้)

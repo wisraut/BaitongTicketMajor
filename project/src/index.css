@@ -16,3 +16,11 @@ body {
   background-color: #0f172a;
 }
  */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

@@ -15,16 +15,21 @@ const MENU_KEYS = ["events", "giftshop", "promo"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
 
-const MENU_SECTIONS: Record<MenuKeyStrict, string[]> = {
-  events: ["Concerts", "Sports", "Performing Arts"],
-  giftshop: ["T-Shirts", "Merch Bundles"],
-  promo: ["Flash Sale", "Season Pass"],
-};
-
-const subPath = (group: MenuKeyStrict) => {
-  if (group === "events") return "/events";
-  if (group === "giftshop") return "/shop";
-  return "/promo";
+// ทำให้แต่ละรายการมี path ของมันเอง
+const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
+  events: [
+    { label: "Concerts", to: "/concerts" },
+    { label: "Sports", to: "/sports" },
+    { label: "Performing Arts", to: "/performance" },
+  ],
+  giftshop: [
+    { label: "T-Shirts", to: "/shop/tshirts" },
+    { label: "Merch Bundles", to: "/shop/bundles" },
+  ],
+  promo: [
+    { label: "Flash Sale", to: "/promo/flash" },
+    { label: "Season Pass", to: "/promo/season" },
+  ],
 };
 
 // =============== dropdown desktop ===============
@@ -39,7 +44,6 @@ const DesktopDrop: React.FC<{
 
   return (
     <div className="relative">
-      {/* hover ที่ปุ่มให้เปิด */}
       <button
         type="button"
         onClick={() => setOpen(isOpen ? null : me)}
@@ -62,18 +66,17 @@ const DesktopDrop: React.FC<{
       {isOpen && (
         <div
           className="absolute left-0 top-full z-50 mt-2 w-56 rounded-xl border border-white/10 bg-slate-800 p-2 shadow-xl"
-          // ลากเมาส์ลงมาที่กล่องก็ให้ยังเปิดอยู่
           onMouseEnter={() => setOpen(me)}
         >
           <div className="max-h-[60vh] overflow-y-auto pr-1">
-            {items.map((x) => (
+            {items.map((item) => (
               <Link
-                key={x}
-                to={subPath(me)}
+                key={item.to}
+                to={item.to}
                 className="block rounded-lg px-3 py-2 text-sm text-white/85 hover:bg-white/10 hover:text-white"
                 onClick={() => setOpen(null)}
               >
-                {x}
+                {item.label}
               </Link>
             ))}
           </div>
@@ -96,7 +99,6 @@ export default function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // โหลด user จาก localStorage ครั้งเดียว
   useEffect(() => {
     const raw = localStorage.getItem("loggedInUser");
     if (raw) {
@@ -108,7 +110,6 @@ export default function Header() {
     }
   }, []);
 
-  // ปิดเมนูเมื่อคลิกนอก
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -123,7 +124,6 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
-  // ล็อก scroll ตอนเปิดเมนูมือถือ
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => {
@@ -141,7 +141,7 @@ export default function Header() {
   return (
     <header className="relative z-50 w-full bg-[#234C6A] text-white shadow-md">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
-        {/* left: logo + desktop menu */}
+        {/* left */}
         <div className="flex items-center gap-6">
           <Link
             to="/"
@@ -207,7 +207,7 @@ export default function Header() {
                   <User className="h-4 w-4" />
                 </div>
                 <span className="max-w-[140px] truncate">
-                  {user.name || user.phone}
+                  {user.email || user.phone}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -235,7 +235,7 @@ export default function Header() {
             </Link>
           )}
 
-          {/* mobile hamburger */}
+          {/* mobile */}
           <button
             className="rounded-md p-2 hover:bg-white/10 lg:hidden"
             onClick={() => {
@@ -252,7 +252,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* ========== MOBILE MENU ========== */}
+      {/* MOBILE MENU */}
       <div
         className={`lg:hidden border-t border-white/10 bg-[#234C6A] shadow-lg transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
           mobileOpen ? "max-h-[70vh] opacity-100" : "max-h-0 opacity-0"
@@ -268,35 +268,18 @@ export default function Header() {
                   ? "GiftShop"
                   : "Promo"}
               </p>
-              {MENU_SECTIONS[key].map((x) => (
+              {MENU_SECTIONS[key].map((item) => (
                 <Link
-                  key={`${key}-${x}`}
-                  to={subPath(key)}
+                  key={`${key}-${item.to}`}
+                  to={item.to}
                   className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
                   onClick={() => setMobileOpen(false)}
                 >
-                  {x}
+                  {item.label}
                 </Link>
               ))}
             </div>
           ))}
-
-          {user ? (
-            <button
-              onClick={handleLogout}
-              className="mt-2 flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-            >
-              <LogOut className="h-4 w-4" /> Logout
-            </button>
-          ) : (
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="mt-2 flex items-center gap-2 rounded-full border border-white/20 px-4 py-2 text-sm hover:bg-white/10"
-            >
-              <User className="h-4 w-4" /> Register / login
-            </Link>
-          )}
         </div>
       </div>
     </header>

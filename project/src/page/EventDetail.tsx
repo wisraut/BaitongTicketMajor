@@ -3,9 +3,9 @@ import { useParams, Link } from "react-router-dom";
 
 // ดึงทุกหมวด
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
-import { EVENTS as FOOTBALL_EVENTS } from "../data/eventfootball";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
 import { EVENTS as GIFTSHOP_EVENTS } from "../data/eventgiftshop";
+import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
@@ -26,9 +26,9 @@ type AnyEvent = {
 // รวมเป็นก้อนเดียว
 const ALL_EVENTS: AnyEvent[] = [
   ...CONCERT_EVENTS,
-  ...FOOTBALL_EVENTS,
   ...BOXING_EVENTS,
   ...GIFTSHOP_EVENTS,
+  ...PERFORMANCE_EVENTS,
 ];
 
 export default function EventDetail() {

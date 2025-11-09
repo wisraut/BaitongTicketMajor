@@ -6,15 +6,15 @@ import type { EventItem } from "../components/home/EventCard";
 
 // รวม EVENT จากแต่ละหมวด
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
-import { EVENTS as FOOTBALL_EVENTS } from "../data/eventfootball";
 import { EVENTS as GIFTSHOP_EVENTS } from "../data/eventgiftshop";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
+import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
 // สไลด์สำหรับ FrontBanner
 const slides = [
   { id: 1, imageUrl: "/ball.jpg" },
   { id: 2, imageUrl: "/concert.png" },
-  { id: 3, imageUrl: "/concert.png" },
+  { id: 3, imageUrl: "/shirt.jpg" },
 ];
 
 // แปลงโครง data -> โครงที่การ์ดใช้
@@ -32,8 +32,9 @@ function toEventItem(event: any): EventItem {
 
 export default function BaiTongTicketPage() {
   const concertItems = CONCERT_EVENTS.map(toEventItem);
-  const sportItems = [...FOOTBALL_EVENTS, ...BOXING_EVENTS].map(toEventItem);
+  const sportItems = [...BOXING_EVENTS].map(toEventItem);
   const giftshopItems = GIFTSHOP_EVENTS.map(toEventItem);
+  const performanceITEM = PERFORMANCE_EVENTS.map(toEventItem);
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -41,19 +42,31 @@ export default function BaiTongTicketPage() {
       <main>
         <FrontBanner slides={slides} />
 
-        <Section title="Recommended Events" items={concertItems} />
+        <Section title="Recommended Events" items={concertItems} scrollable />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>
 
-        <Section title="Sport Events" items={sportItems} />
+        <Section title="Sport Events" items={sportItems} scrollable />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>
 
-        <Section title="Giftshop / Special" items={giftshopItems} />
+        <Section title="Giftshop / Special" items={giftshopItems} scrollable />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <hr className="my-6 border-slate-200" />
+        </div>
+
+        <Section
+          title="Giftshop / Special"
+          items={performanceITEM}
+          scrollable
+        />
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <hr className="my-6 border-slate-200" />
+        </div>
       </main>
       <Footer />
     </div>

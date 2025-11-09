@@ -25,9 +25,7 @@ const LoginAndReg: React.FC = () => {
             onSwitch={() => setMode("register")}
           />
         ) : (
-          <RegisterForm
-            onSwitch={() => setMode("login")}
-          />
+          <RegisterForm onSwitch={() => setMode("login")} />
         )}
       </main>
 
