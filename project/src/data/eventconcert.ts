@@ -87,12 +87,12 @@ export const EVENTS: Event[] = [
     prices: [{ name: "Pro Chang", price: 1450 }],
   },
   {
-    id: "big-mountain-15",
-    title: "Pepsi Presents Big Mountain Music Festival 15",
-    subtitle: "เทศกาลดนตรีสุดยิ่งใหญ่",
-    dateRange: "6–7 December 2025",
-    Time: "19:00 PM",
-    venue: "The Ocean, เขาใหญ่",
+    id: "shine-bangkok-fancon-where-we-loved-how-we-fought-and-now-we-shine",
+    title: "Shine Bangkok Fancon: Where We Loved,How We Fought and Now We Shine",
+    subtitle: "Where We Loved,How We Fought and Now We Shine",
+    dateRange: "วันเสาร์ที่ 1 พฤศจิกายน 2568",
+    Time: "18.30 น.",
+    venue: "ยูเนี่ยน ฮอลล์, ศูนย์การค้ายูเนี่ยน มอลล์ /RERUN by TTM LIVE",
     banner: "/banners/concert/Bigmountain.jpg",           
     stageImage: "/stages/bmmf15.png",      
     description:
