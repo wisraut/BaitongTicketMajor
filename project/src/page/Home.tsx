@@ -60,7 +60,7 @@ export default function BaiTongTicketPage() {
         </div>
 
         <Section
-          title="Giftshop / Special"
+          title="Performance Art"
           items={performanceITEM}
           scrollable
         />
