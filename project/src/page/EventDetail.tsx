@@ -104,11 +104,11 @@ export default function EventDetail() {
         <div className="flex-1">
           <div className="max-w-6xl mx-auto px-4 md:px-0 py-8 space-y-8">
             <div className="space-y-4 text-sm leading-relaxed text-gray-800">
-              {event.description ? <p>{event.description}</p> : null}
+                {event.description ? <h4>{event.description}</h4> : null}
 
-              {event.prices && event.prices.length > 0 ? (
+                {event.prices && event.prices.length > 0 ? (
                 <div>
-                  <p className="font-semibold mb-2">ประเภทบัตร / ราคา</p>
+                  <p className="font-semibold mb-2"> ประเภทบัตร / ราคา</p>
                   <ul className="list-disc list-inside space-y-1">
                     {event.prices.map((tier) => (
                       <li key={tier.name}>
