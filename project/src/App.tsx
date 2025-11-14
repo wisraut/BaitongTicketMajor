@@ -6,6 +6,7 @@ import EventDetail from "./page/EventDetail";
 import ConcertMenuPage from "./page/ConcertMenu";
 import SportMenuPage from "./page/SportMenu";
 import PerformanceMenuPage from "./page/PerformanceMenu";
+import PaymentPage from "./page/Payment";
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
       <Route path="/cart" element={<div className="p-6">Cart page</div>} />
       <Route path="/help" element={<div className="p-6">Help page</div>} />
       <Route path="/events/:id" element={<EventDetail />} />
+      <Route path="/payment" element={<PaymentPage />} />
     </Routes>
   );
 }

@@ -148,7 +148,7 @@ export default function Header() {
             className="rounded focus-visible:ring-2 focus-visible:ring-amber-400/70"
           >
             <img
-              src="./logo.png"
+              src="/logo.png"
               alt="BaiTongTicket"
               className="block w-auto max-h-12 sm:max-h-20 md:max-h-20"
             />
