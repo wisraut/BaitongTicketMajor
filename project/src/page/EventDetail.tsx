@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
@@ -15,9 +16,29 @@ const ALL_EVENTS = [
   ...PERFORMANCE_EVENTS,
 ];
 
+type LoggedInUser = {
+  email: string;
+  phone?: string;
+  name?: string;
+};
+
 export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const [user, setUser] = useState<LoggedInUser | null>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("loggedInUser");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
 
   const event = ALL_EVENTS.find((e) => e.id === id);
 
@@ -30,6 +51,10 @@ export default function EventDetail() {
   }
 
   const handleGoPayment = () => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
     localStorage.setItem("currentEventId", event.id);
     navigate("/payment");
   };
@@ -99,6 +124,38 @@ export default function EventDetail() {
         )}
       </div>
       <Footer />
+
+      {showLoginPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+              กรุณาเข้าสู่ระบบ
+            </h2>
+            <p className="text-sm text-slate-600 mb-4">
+              กรุณาเข้าสู่ระบบก่อนทำการจองบัตร
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowLoginPrompt(false)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLoginPrompt(false);
+                  navigate("/login");
+                }}
+                className="rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white"
+              >
+                ไปหน้าเข้าสู่ระบบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
