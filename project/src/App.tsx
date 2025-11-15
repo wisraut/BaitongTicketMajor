@@ -1,8 +1,8 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./page/Home";
-import Shop from "./page/Shop";
 import Login from "./page/LoginAndReg";
 import EventDetail from "./page/EventDetail";
+import ShopDetail from "./page/ShopDetail";
 import ConcertMenuPage from "./page/ConcertMenu";
 import SportMenuPage from "./page/SportMenu";
 import PerformanceMenuPage from "./page/PerformanceMenu";
@@ -12,7 +12,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/shop" element={<Shop />} />
+      <Route path="/shop" element={<ShopDetail />} />
       <Route path="/sports" element={<SportMenuPage />} />
       <Route path="/performance" element={<PerformanceMenuPage />} />
       <Route path="/concerts" element={<ConcertMenuPage />} />

@@ -23,9 +23,9 @@ export default function ConcertMenu() {
     <>
       <Header />
       <main className="bg-white min-h-screen pb-10">
-        <Section title="Recommended Events" items={concertItems} />
+        <Section title="Concert" items={concertItems} />
       </main>
-      <Pagination/>
+      <Pagination />
       <Footer />
     </>
   );

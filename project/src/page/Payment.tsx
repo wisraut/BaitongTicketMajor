@@ -1,23 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/useall/Header";
-import Footer from "../components/useall/Footer";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
-import { EVENTS as GIFTSHOP_EVENTS } from "../data/eventgiftshop";
 import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
-const ALL_EVENTS = [
-  ...CONCERT_EVENTS,
-  ...BOXING_EVENTS,
-  ...GIFTSHOP_EVENTS,
-  ...PERFORMANCE_EVENTS,
-];
+const ALL_EVENTS = [...CONCERT_EVENTS, ...BOXING_EVENTS, ...PERFORMANCE_EVENTS];
 
 type PriceTier = (typeof ALL_EVENTS)[number]["prices"][number];
 
-export default function Payment() {
+export default function PaymentPage() {
   const [event, setEvent] = useState<(typeof ALL_EVENTS)[number] | null>(null);
   const [selectedTier, setSelectedTier] = useState<PriceTier | null>(null);
   const [qty, setQty] = useState(1);
@@ -52,9 +44,9 @@ export default function Payment() {
     const payload = {
       eventId: event.id,
       eventTitle: event.title,
-      dateRange: event.dateRange,
-      time: event.Time,
-      venue: event.venue,
+      dateRange: (event as any).dateRange,
+      time: (event as any).Time,
+      venue: (event as any).venue,
       banner: event.banner,
       tierName: selectedTier.name,
       price: selectedTier.price,
@@ -70,9 +62,10 @@ export default function Payment() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <Header />
       <div className="max-w-4xl mx-auto px-4 py-8 grid gap-6 md:grid-cols-3">
         <div className="md:col-span-2 space-y-4">
+          <h1 className="text-xl font-bold text-slate-900">ชำระเงิน</h1>
+
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex gap-4">
             {event.banner && (
               <img
@@ -84,14 +77,18 @@ export default function Payment() {
             <div className="flex-1 text-sm space-y-1">
               <p className="text-xs uppercase text-slate-400">{event.id}</p>
               <p className="font-semibold text-slate-900">{event.title}</p>
-              {event.dateRange && (
-                <p className="text-slate-600">วันจัดงาน {event.dateRange}</p>
+              {(event as any).dateRange && (
+                <p className="text-slate-600">
+                  วันจัดงาน {(event as any).dateRange}
+                </p>
               )}
-              {event.Time && (
-                <p className="text-slate-600">เวลา {event.Time}</p>
+              {(event as any).Time && (
+                <p className="text-slate-600">เวลา {(event as any).Time}</p>
               )}
-              {event.venue && (
-                <p className="text-slate-600">สถานที่จัดงาน {event.venue}</p>
+              {(event as any).venue && (
+                <p className="text-slate-600">
+                  สถานที่จัดงาน {(event as any).venue}
+                </p>
               )}
             </div>
           </div>
@@ -133,13 +130,13 @@ export default function Payment() {
                 </label>
                 <select
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  value={selectedTier?.name ?? ""}
+                  value={selectedVariant?.name ?? ""}
                   onChange={(e) => {
                     const tier =
                       event.prices.find(
                         (p: PriceTier) => p.name === e.target.value
                       ) || null;
-                    setSelectedTier(tier);
+                    setSelectedVariant(tier);
                   }}
                 >
                   <option value="">เลือกโซนที่นั่ง</option>
@@ -174,12 +171,13 @@ export default function Payment() {
             <h2 className="font-semibold text-slate-900">สรุปคำสั่งซื้อ</h2>
             <div className="flex justify-between">
               <span>โซนที่นั่ง</span>
-              <span>{selectedTier ? selectedTier.name : "-"}</span>
+              <span>{selectedVariant ? selectedVariant.name : "-"}</span>
             </div>
             <div className="flex justify-between">
               <span>ราคาต่อใบ</span>
               <span>
-                {selectedTier ? selectedTier.price.toLocaleString() : 0} บาท
+                {selectedVariant ? selectedVariant.price.toLocaleString() : 0}{" "}
+                บาท
               </span>
             </div>
             <div className="flex justify-between">
@@ -193,7 +191,7 @@ export default function Payment() {
 
             <button
               onClick={handleConfirmPayment}
-              disabled={!selectedTier}
+              disabled={!selectedVariant}
               className="mt-4 w-full rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
             >
               ยืนยันการชำระเงิน
@@ -207,7 +205,6 @@ export default function Payment() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   );
 }

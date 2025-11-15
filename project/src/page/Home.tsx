@@ -4,21 +4,18 @@ import Header from "../components/useall/Header";
 import FrontBanner from "../components/useall/FrontBanner";
 import type { EventItem } from "../components/home/EventCard";
 
-// รวม EVENT จากแต่ละหมวด
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
-import { EVENTS as GIFTSHOP_EVENTS } from "../data/eventgiftshop";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
 import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
+import { SHOP_PRODUCTS } from "../data/shopProducts";
 
-// สไลด์สำหรับ FrontBanner
 const slides = [
   { id: 1, imageUrl: "/ball.jpg" },
   { id: 2, imageUrl: "/concert.png" },
   { id: 3, imageUrl: "/shirt.jpg" },
 ];
 
-// แปลงโครง data -> โครงที่การ์ดใช้
-function toEventItem(event: any): EventItem {
+function toEventItem(event: any, basePath: string): EventItem {
   return {
     id: event.id,
     image: event.banner,
@@ -27,14 +24,17 @@ function toEventItem(event: any): EventItem {
     date: event.dateRange,
     venue: event.venue,
     time: event.Time ?? "",
+    linkTo: `${basePath}/${event.id}`,
   };
 }
 
 export default function BaiTongTicketPage() {
-  const concertItems = CONCERT_EVENTS.map(toEventItem);
-  const sportItems = [...BOXING_EVENTS].map(toEventItem);
-  const giftshopItems = GIFTSHOP_EVENTS.map(toEventItem);
-  const performanceITEM = PERFORMANCE_EVENTS.map(toEventItem);
+  const concertItems = CONCERT_EVENTS.map((e) => toEventItem(e, "/events"));
+  const sportItems = BOXING_EVENTS.map((e) => toEventItem(e, "/events"));
+  const performanceItems = PERFORMANCE_EVENTS.map((e) =>
+    toEventItem(e, "/events")
+  );
+  const giftshopItems = SHOP_PRODUCTS.map((p) => toEventItem(p, "/shop"));
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
@@ -59,11 +59,7 @@ export default function BaiTongTicketPage() {
           <hr className="my-6 border-slate-200" />
         </div>
 
-        <Section
-          title="Performance Art"
-          items={performanceITEM}
-          scrollable
-        />
+        <Section title="Performance Art" items={performanceItems} scrollable />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>

@@ -3,18 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
-import { EVENTS as GIFTSHOP_EVENTS } from "../data/eventgiftshop";
 import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-const ALL_EVENTS = [
-  ...CONCERT_EVENTS,
-  ...BOXING_EVENTS,
-  ...GIFTSHOP_EVENTS,
-  ...PERFORMANCE_EVENTS,
-];
+const ALL_EVENTS = [...CONCERT_EVENTS, ...BOXING_EVENTS, ...PERFORMANCE_EVENTS];
 
 type LoggedInUser = {
   email: string;
@@ -62,6 +56,7 @@ export default function EventDetail() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
+
       <div className="bg-black">
         <div className="max-w-5xl mx-auto px-4 py-8 md:py-10">
           <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -79,18 +74,20 @@ export default function EventDetail() {
               {event.subtitle && (
                 <p className="text-sm text-slate-200">{event.subtitle}</p>
               )}
-              {event.dateRange && (
+              {(event as any).dateRange && (
                 <p className="text-sm text-slate-200">
-                  วันจัดงาน {event.dateRange}
+                  วันจัดงาน {(event as any).dateRange}
                 </p>
               )}
-              {event.venue && (
+              {(event as any).venue && (
                 <p className="text-sm text-slate-200">
-                  สถานที่จัดงาน {event.venue}
+                  สถานที่จัดงาน {(event as any).venue}
                 </p>
               )}
-              {event.Time && (
-                <p className="text-sm text-slate-200">เวลา {event.Time}</p>
+              {(event as any).Time && (
+                <p className="text-sm text-slate-200">
+                  เวลา {(event as any).Time}
+                </p>
               )}
               <div className="mt-4">
                 <button
@@ -113,16 +110,17 @@ export default function EventDetail() {
           </div>
         )}
 
-        {event.stageImage && (
+        {(event as any).stageImage && (
           <div className="flex justify-center pb-8">
             <img
-              src={event.stageImage}
+              src={(event as any).stageImage}
               alt="ผังที่นั่ง"
               className="max-w-full rounded-lg object-contain"
             />
           </div>
         )}
       </div>
+
       <Footer />
 
       {showLoginPrompt && (
