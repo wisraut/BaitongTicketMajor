@@ -55,11 +55,13 @@ export default function BaiTongTicketPage() {
         </div>
 
         <Section title="Giftshop / Special" items={giftshopItems} scrollable />
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>
 
         <Section title="Performance Art" items={performanceItems} scrollable />
+
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>
