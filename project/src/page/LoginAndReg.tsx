@@ -30,7 +30,6 @@ const LoginAndReg: React.FC = () => {
           />
         )}
       </main>
-
       <Footer />
     </div>
   );
