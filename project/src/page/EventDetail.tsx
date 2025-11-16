@@ -8,12 +8,26 @@ import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-const ALL_EVENTS = [...CONCERT_EVENTS, ...BOXING_EVENTS, ...PERFORMANCE_EVENTS];
+const ALL_EVENTS = [
+  ...CONCERT_EVENTS,
+  ...BOXING_EVENTS,
+  ...PERFORMANCE_EVENTS,
+];
 
 type LoggedInUser = {
   email: string;
   phone?: string;
   name?: string;
+};
+
+type CartItem = {
+  id: string;
+  type: "event" | "product";
+  title: string;
+  image: string;
+  option?: string;
+  unitPrice: number;
+  quantity: number;
 };
 
 export default function EventDetail() {
@@ -53,6 +67,49 @@ export default function EventDetail() {
     navigate("/payment");
   };
 
+  const handleAddToCart = () => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    const prices = (event as any).prices as
+      | { name: string; price: number }[]
+      | undefined;
+
+    const defaultTier = prices && prices.length > 0 ? prices[0] : undefined;
+
+    const cartItem: CartItem = {
+      id: defaultTier
+        ? `${event.id}:${defaultTier.name}`
+        : `${event.id}:default`,
+      type: "event",
+      title: event.title,
+      image: event.banner,
+      option: defaultTier ? defaultTier.name : undefined,
+      unitPrice: defaultTier ? defaultTier.price : 0,
+      quantity: 1,
+    };
+
+    const raw = localStorage.getItem("cartItems");
+    let items: CartItem[] = [];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          items = parsed;
+        }
+      } catch {
+        items = [];
+      }
+    }
+
+    items.push(cartItem);
+    localStorage.setItem("cartItems", JSON.stringify(items));
+
+    navigate("/cart");
+  };
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -89,13 +146,21 @@ export default function EventDetail() {
                   เวลา {(event as any).Time}
                 </p>
               )}
-              <div className="mt-4">
+
+              <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
                 <button
                   type="button"
                   onClick={handleGoPayment}
                   className="inline-flex items-center justify-center rounded-full bg-red-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                 >
                   จองบัตร
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className="inline-flex items-center justify-center rounded-full border border-white/60 px-8 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
+                >
+                  เพิ่มลงตะกร้า
                 </button>
               </div>
             </div>
@@ -130,7 +195,7 @@ export default function EventDetail() {
               กรุณาเข้าสู่ระบบ
             </h2>
             <p className="text-sm text-slate-600 mb-4">
-              กรุณาเข้าสู่ระบบก่อนทำการจองบัตร
+              กรุณาเข้าสู่ระบบก่อนทำการจองบัตรหรือเพิ่มงานแสดงลงตะกร้า
             </p>
             <div className="flex justify-end gap-2">
               <button

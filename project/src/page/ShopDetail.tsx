@@ -7,6 +7,16 @@ import Footer from "../components/useall/Footer";
 import { SHOP_PRODUCTS } from "../data/shopProducts";
 import type { ShopProduct, ShopVariant } from "../data/shopProducts";
 
+type CartItem = {
+  id: string;
+  type: "event" | "product";
+  title: string;
+  image: string;
+  option?: string;
+  unitPrice: number;
+  quantity: number;
+};
+
 export default function ShopDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -16,10 +26,10 @@ export default function ShopDetail() {
   );
 
   const [activeImage, setActiveImage] = useState<string | null>(
-    product?.images[0] ?? null
+    product && product.images.length > 0 ? product.images[0] : null
   );
   const [selectedVariant, setSelectedVariant] = useState<ShopVariant | null>(
-    product?.variants[0] ?? null
+    product && product.variants.length > 0 ? product.variants[0] : null
   );
   const [qty, setQty] = useState<number>(1);
 
@@ -38,29 +48,31 @@ export default function ShopDetail() {
   const handleAddToCart = () => {
     if (!selectedVariant) return;
 
-    const item = {
-      type: "shop" as const,
-      productId: product.id,
-      name: product.name,
-      variantId: selectedVariant.id,
-      variantLabel: selectedVariant.label,
-      price: selectedVariant.price,
+    const cartItem: CartItem = {
+      id: `${product.id}:${selectedVariant.id}`,
+      type: "product",
+      title: product.name,
+      image: activeImage ?? product.banner,
+      option: selectedVariant.label,
+      unitPrice: selectedVariant.price,
       quantity: qty,
-      banner: product.banner,
     };
 
     const raw = localStorage.getItem("cartItems");
-    let cart: unknown[] = [];
+    let items: CartItem[] = [];
     if (raw) {
       try {
-        cart = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          items = parsed;
+        }
       } catch {
-        cart = [];
+        items = [];
       }
     }
 
-    const newCart = [...cart, item];
-    localStorage.setItem("cartItems", JSON.stringify(newCart));
+    items.push(cartItem);
+    localStorage.setItem("cartItems", JSON.stringify(items));
 
     navigate("/cart");
   };
@@ -146,7 +158,9 @@ export default function ShopDetail() {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-semibold text-slate-800">จำนวน</p>
+                <p className="text-sm font-semibold text-slate-800">
+                  จำนวน
+                </p>
                 <input
                   type="number"
                   min={1}

@@ -7,6 +7,7 @@ import ConcertMenuPage from "./page/ConcertMenu";
 import SportMenuPage from "./page/SportMenu";
 import PerformanceMenuPage from "./page/PerformanceMenu";
 import PaymentPage from "./page/Payment";
+import CartPage from "./page/Cart";
 
 export default function App() {
   return (
@@ -19,10 +20,11 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/events" element={<div className="p-6">Events page</div>} />
       <Route path="/promo" element={<div className="p-6">Promo page</div>} />
-      <Route path="/cart" element={<div className="p-6">Cart page</div>} />
+      <Route path="/cart" element={<CartPage/>} />
       <Route path="/help" element={<div className="p-6">Help page</div>} />
       <Route path="/events/:id" element={<EventDetail />} />
       <Route path="/payment" element={<PaymentPage />} />
+
     </Routes>
   );
 }
