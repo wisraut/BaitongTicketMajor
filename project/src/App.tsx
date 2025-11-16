@@ -8,6 +8,8 @@ import SportMenuPage from "./page/SportMenu";
 import PerformanceMenuPage from "./page/PerformanceMenu";
 import PaymentPage from "./page/Payment";
 import CartPage from "./page/Cart";
+import CheckoutPage from "./page/Checkout";
+
 
 export default function App() {
   return (
@@ -24,6 +26,7 @@ export default function App() {
       <Route path="/help" element={<div className="p-6">Help page</div>} />
       <Route path="/events/:id" element={<EventDetail />} />
       <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/checkout" element={<CheckoutPage/>} />
 
     </Routes>
   );

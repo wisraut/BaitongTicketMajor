@@ -1,7 +1,7 @@
-// src/page/Cart.tsx
 import { useEffect, useState } from "react";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import { useNavigate } from "react-router-dom";
 
 type CartItem = {
   id: string;
@@ -50,6 +50,8 @@ export default function CartPage() {
     (sum, item) => sum + item.unitPrice * item.quantity,
     0
   );
+
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -139,6 +141,7 @@ export default function CartPage() {
               </div>
               <button
                 disabled={items.length === 0}
+                onClick={() => navigate("/checkout")}
                 className="mt-4 w-full rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
               >
                 ดำเนินการชำระเงิน
