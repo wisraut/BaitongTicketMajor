@@ -1,6 +1,7 @@
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 import Section from "../components/useall/Section";
+import Pagination from "../components/useall/Pagination";
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
 
 function toEventItem(ev: any) {
@@ -22,8 +23,9 @@ export default function ConcertMenu() {
     <>
       <Header />
       <main className="bg-white min-h-screen pb-10">
-        <Section title="Recommended Events" items={concertItems} />
+        <Section title="Concert" items={concertItems} />
       </main>
+      <Pagination />
       <Footer />
     </>
   );
