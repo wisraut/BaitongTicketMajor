@@ -20,22 +20,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
     evt.preventDefault();
     setErrorMsg(null);
 
-    // ตรวจรหัสผ่านตรงกันไหม
     if (password !== currentPassword) {
       setErrorMsg("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
       return;
     }
 
     setLoading(true);
-    try {
-      // สมัครด้วย Firebase Auth ผ่าน context
-      await signUp(email, password);
-      // ถ้าต้องเก็บ name เพิ่ม สามารถไป set ใน Firestore / profile ภายหลังได้
 
-      // สมัครเสร็จ → เด้งกลับไปหน้า Login
+    try {
+      const trimmedName = name.trim();
+      await signUp(email, password, trimmedName || email);
+
+      // สมัครเสร็จ ให้สลับไปหน้า Login
       onSwitch?.();
     } catch (err) {
       let message = "สมัครสมาชิกไม่สำเร็จ";
+
       if (typeof err === "object" && err !== null && "code" in err) {
         const fbErr = err as FirebaseError;
         switch (fbErr.code) {
@@ -52,6 +52,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
             message = fbErr.code;
         }
       }
+
       setErrorMsg(message);
     } finally {
       setLoading(false);
@@ -67,14 +68,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
 
   return (
     <div
-        className="
-          w-[380px] max-w-[92vw]
-          rounded-[32px]
-          p-8
-          bg-[#e3e6eb]
-          shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]"
+      className="
+        w-[380px] max-w-[92vw]
+        rounded-[32px]
+        p-8
+        bg-[#e3e6eb]
+        shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]
+      "
     >
-      <h2 className="mb-5 text-center text-4xl font-extrabold text-[#3c455e] tracking-wide">
+      <h2 className="mb-5 text-center text-4xl font-extrabold tracking-wide text-[#3c455e]">
         Register
       </h2>
 

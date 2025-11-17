@@ -23,9 +23,15 @@ const LoginForm: React.FC<LoginFormProps> = (props) => {
     try {
       const result = await logIn(email, password);
 
+      const displayName =
+        result.user.displayName && result.user.displayName.trim() !== ""
+          ? result.user.displayName
+          : email;
+
       localStorage.setItem(
         "loggedInUser",
         JSON.stringify({
+          name: displayName,          // 👈 เก็บชื่อไว้ตรงนี้
           email: result.user.email,
           uid: result.user.uid,
         })
@@ -46,28 +52,31 @@ const LoginForm: React.FC<LoginFormProps> = (props) => {
     "outline-none placeholder:text-slate-500 " +
     "focus:ring-2 focus:ring-blue-400/70 focus:border-blue-400 transition";
 
-  // ⭐ ปุ่มที่ Register ใช้อยู่
   const actionBtn =
     "px-8 py-2 rounded-full text-sm font-semibold text-[#2f3d6b] " +
     "bg-transparent hover:bg-[#e4ecff] active:bg-[#d4e0ff] " +
     "transition-all duration-150 disabled:opacity-60";
 
   return (
-      <div
-        className="
-          w-[380px] max-w-[92vw]
-          rounded-[32px]
-          p-8
-          bg-[#e3e6eb]
-          shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]"
-      >
+    <div
+      className="
+        w-[380px] max-w-[92vw]
+        rounded-[32px]
+        p-8
+        bg-[#e3e6eb]
+        shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]
+      "
+    >
       <form onSubmit={handleSubmit} className="space-y-5">
         <h2 className="text-center text-4xl font-extrabold text-[#3c455e] tracking-wide">
           Login
         </h2>
 
         {errorMsg && (
-          <Text as="p" className="text-center text-[15px] font-medium text-red-600">
+          <Text
+            as="p"
+            className="text-center text-[15px] font-medium text-red-600"
+          >
             {errorMsg}
           </Text>
         )}
@@ -91,11 +100,7 @@ const LoginForm: React.FC<LoginFormProps> = (props) => {
         />
 
         <div className="pt-1 flex justify-center">
-          <button
-            type="submit"
-            disabled={submitting}
-            className={actionBtn}
-          >
+          <button type="submit" disabled={submitting} className={actionBtn}>
             {submitting ? "กำลังเข้าสู่ระบบ..." : "Login"}
           </button>
         </div>

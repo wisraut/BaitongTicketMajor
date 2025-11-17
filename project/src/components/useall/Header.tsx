@@ -10,12 +10,10 @@ import {
   LogOut,
 } from "lucide-react";
 
-// เมนูหลัก
 const MENU_KEYS = ["events", "giftshop", "promo"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
 
-// ทำให้แต่ละรายการมี path ของมันเอง
 const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
   events: [
     { label: "Concerts", to: "/concerts" },
@@ -32,7 +30,6 @@ const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
   ],
 };
 
-// =============== dropdown desktop ===============
 const DesktopDrop: React.FC<{
   label: string;
   openKey: MenuKey;
@@ -86,14 +83,16 @@ const DesktopDrop: React.FC<{
   );
 };
 
-// =============== HEADER หลัก ===============
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<MenuKey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [user, setUser] = useState<{ email: string; phone?: string } | null>(
-    null
-  );
+
+  const [user, setUser] = useState<{
+    name?: string;
+    email?: string;
+    uid?: string;
+  } | null>(null);
 
   const navRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -101,12 +100,20 @@ export default function Header() {
 
   useEffect(() => {
     const raw = localStorage.getItem("loggedInUser");
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        setUser(null);
-      }
+    if (!raw) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        name?: string;
+        email?: string;
+        uid?: string;
+      };
+      setUser(parsed);
+    } catch {
+      setUser(null);
     }
   }, []);
 
@@ -137,6 +144,11 @@ export default function Header() {
     setProfileOpen(false);
     navigate("/");
   };
+
+  const displayName =
+    user?.name && user.name.trim() !== ""
+      ? user.name
+      : user?.email ?? "";
 
   return (
     <header className="relative z-50 w-full bg-[#234C6A] text-white shadow-md">
@@ -206,8 +218,8 @@ export default function Header() {
                 <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
                   <User className="h-4 w-4" />
                 </div>
-                <span className="max-w-[140px] truncate">
-                  {user.email || user.phone}
+                <span className="truncate max-w-[160px]">
+                  {displayName}
                 </span>
                 <ChevronDown className="h-4 w-4" />
               </button>

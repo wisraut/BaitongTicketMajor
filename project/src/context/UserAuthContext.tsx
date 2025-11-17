@@ -6,15 +6,20 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
+  updateProfile,
   type User,
   type UserCredential,
 } from "firebase/auth";
-import { auth } from "../firebase.ts";
+import { auth } from "../firebase";
 
 type UserAuthContextType = {
   user: User | null;
   logIn: (email: string, password: string) => Promise<UserCredential>;
-  signUp: (email: string, password: string) => Promise<UserCredential>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<UserCredential>;
   logOut: () => Promise<void>;
 };
 
@@ -33,8 +38,19 @@ export function UserAuthContextProvider({
     return signInWithEmailAndPassword(auth, email, password);
   }
 
-  function signUp(email: string, password: string) {
-    return createUserWithEmailAndPassword(auth, email, password);
+  async function signUp(
+    email: string,
+    password: string,
+    name: string
+  ): Promise<UserCredential> {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+    const trimmedName = name.trim();
+    if (trimmedName) {
+      await updateProfile(cred.user, { displayName: trimmedName });
+    }
+
+    return cred;
   }
 
   function logOut() {
