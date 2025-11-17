@@ -28,7 +28,6 @@ const LoginAndReg: React.FC = () => {
           <RegisterForm onSwitch={() => setMode("login")} />
         )}
       </main>
-
       <Footer />
     </div>
   );
