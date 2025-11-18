@@ -16,6 +16,8 @@ import {
   type Event as PerformanceEvent,
 } from "../data/eventperformance";
 
+import QRCodePopup from "../payment/qrcode"; // <<< ใช้ไฟล์ Qrcode.tsx ของคุณ :contentReference[oaicite:1]{index=1}
+
 // รวม type งานทุกหมวดเป็นตัวเดียว
 type AnyEvent = ConcertEvent | BoxingEvent | PerformanceEvent;
 
@@ -29,10 +31,29 @@ const ALL_EVENTS: AnyEvent[] = [
 // ดึง type ราคาต่อ tier จาก event จริง
 type PriceTier = AnyEvent["prices"][number];
 
+type HistoryItem = {
+  id: string;
+  userEmail: string | null;
+  createdAt: string;
+  eventId: string;
+  eventTitle: string;
+  dateRange?: string;
+  time?: string;
+  venue?: string;
+  banner?: string;
+  tierName: string;
+  price: number;
+  quantity: number;
+  total: number;
+};
+
 export default function PaymentPage() {
   const [event, setEvent] = useState<AnyEvent | null>(null);
   const [selectedTier, setSelectedTier] = useState<PriceTier | null>(null);
   const [qty, setQty] = useState(1);
+
+  const [showQR, setShowQR] = useState(false); // <<< คุม popup QR
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,7 +78,16 @@ export default function PaymentPage() {
     );
   }
 
+  const total = selectedTier ? selectedTier.price * qty : 0;
+
+  // กดปุ่ม "ยืนยันการชำระเงิน" -> แค่เปิด QR ก่อน
   const handleConfirmPayment = () => {
+    if (!selectedTier) return;
+    setShowQR(true);
+  };
+
+  // ฟังก์ชันเก็บ order ลง localStorage (ทั้ง lastOrder + history)
+  const finalizePayment = () => {
     if (!selectedTier) return;
 
     const payload = {
@@ -73,16 +103,54 @@ export default function PaymentPage() {
       total: selectedTier.price * qty,
     };
 
+    // เก็บ lastOrder (ของเดิม)
     localStorage.setItem("lastOrder", JSON.stringify(payload));
     localStorage.removeItem("currentEventId");
-    navigate("/");
-  };
 
-  const total = selectedTier ? selectedTier.price * qty : 0;
+    // ----- ผูกกับ user ปัจจุบัน แล้วเก็บ history -----
+    let userEmail: string | null = null;
+    const rawUser = localStorage.getItem("loggedInUser");
+    if (rawUser) {
+      try {
+        const parsed = JSON.parse(rawUser) as { email?: string };
+        userEmail = parsed.email ?? null;
+      } catch {
+        userEmail = null;
+      }
+    }
+
+    const historyItem: HistoryItem = {
+      id: `ORD-${Date.now()}`,
+      userEmail,
+      createdAt: new Date().toISOString(),
+      ...payload,
+    };
+
+    const rawHistory = localStorage.getItem("orderHistory");
+    let history: HistoryItem[] = [];
+    if (rawHistory) {
+      try {
+        const parsed = JSON.parse(rawHistory);
+        if (Array.isArray(parsed)) {
+          history = parsed;
+        }
+      } catch {
+        history = [];
+      }
+    }
+
+    history.push(historyItem);
+    localStorage.setItem("orderHistory", JSON.stringify(history));
+
+    // ปิด QR แล้วเด้งไปหน้า history (หรือจะเปลี่ยนเป็น "/" ก็ได้)
+    setShowQR(false);
+    navigate("/history");
+  };
 
   return (
     <div className="min-h-screen bg-slate-100">
       <Header />
+
       <div className="max-w-4xl mx-auto px-4 py-8 grid gap-6 md:grid-cols-3">
         {/* ซ้าย: ข้อมูลงาน + ฟอร์มผู้ซื้อ + เลือกโซน/จำนวน */}
         <div className="md:col-span-2 space-y-4">
@@ -99,22 +167,18 @@ export default function PaymentPage() {
               <p className="text-xs uppercase text-slate-400">{event.id}</p>
               <p className="font-semibold text-slate-900">{event.title}</p>
               {event.dateRange && (
-                <p className="text-slate-600">
-                  วันจัดงาน {event.dateRange}
-                </p>
+                <p className="text-slate-600">วันจัดงาน {event.dateRange}</p>
               )}
               {event.Time && (
                 <p className="text-slate-600">เวลา {event.Time}</p>
               )}
               {event.venue && (
-                <p className="text-slate-600">
-                  สถานที่จัดงาน {event.venue}
-                </p>
+                <p className="text-slate-600">สถานที่จัดงาน {event.venue}</p>
               )}
             </div>
           </div>
 
-          {/* ฟอร์มข้อมูลผู้ซื้อ + เลือก zone / qty */}
+          {/* ฟอร์มข้อมูลผู้ซื้อ + เลือก zone / qty (โค้ดเดิมเกือบทั้งหมด) */}
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 space-y-4 text-sm">
             <h2 className="font-semibold text-slate-900">ข้อมูลผู้ซื้อ</h2>
             <div className="grid gap-3 md:grid-cols-2">
@@ -227,7 +291,17 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
+
       <Footer />
+
+      {/* Popup QR แสดงเมื่อกด "ยืนยันการชำระเงิน" */}
+      {showQR && total > 0 && (
+        <QRCodePopup
+          amount={total}
+          onClose={() => setShowQR(false)}
+          onPaid={finalizePayment}
+        />
+      )}
     </div>
   );
 }

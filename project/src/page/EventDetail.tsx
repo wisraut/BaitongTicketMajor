@@ -16,6 +16,7 @@ import {
 
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import { Select } from "@radix-ui/themes";
 
 type EventDetail = ConcertEvent | BoxingEvent | PerformanceEvent;
 type PriceTier = EventDetail["prices"][number];
@@ -70,14 +71,12 @@ export default function EventDetail() {
   };
 
   const handleAddToCart = () => {
-    // ต้องล็อกอินก่อน
     const rawUser = localStorage.getItem("loggedInUser");
     if (!rawUser) {
       setShowLoginPrompt(true);
       return;
     }
 
-    // ต้องเลือกประเภทบัตรก่อน
     if (!selectedTierName) {
       setErrorMessage("กรุณาเลือกประเภทบัตรก่อนเพิ่มลงตะกร้า");
       return;
@@ -94,9 +93,7 @@ export default function EventDetail() {
     if (rawCart) {
       try {
         const parsed = JSON.parse(rawCart);
-        if (Array.isArray(parsed)) {
-          cart = parsed;
-        }
+        if (Array.isArray(parsed)) cart = parsed;
       } catch {
         cart = [];
       }
@@ -112,7 +109,6 @@ export default function EventDetail() {
       quantity: ticketQty,
     };
 
-    // ถ้ามีบัตรใบเดิมในตะกร้าแล้ว → บวกจำนวนเพิ่ม
     const existingIndex = cart.findIndex(
       (item) =>
         item.type === "event" &&
@@ -134,18 +130,15 @@ export default function EventDetail() {
     setErrorMessage(null);
     navigate("/cart");
   };
-  const selectTier = event.prices.find(
-    (p) => p.name === selectedTierName
-  );
+
+  const selectTier = event.prices.find((p) => p.name === selectedTierName);
   const totalPreview =
-    selectTier && ticketQty > 0
-      ? selectTier.price * ticketQty
-      : 0;
+    selectTier && ticketQty > 0 ? selectTier.price * ticketQty : 0;
 
   return (
     <div className="min-h-screen bg-slate-100">
       <Header />
-      <main className="bg-slate-900 text-white">
+      <main className="bg-black text-white">
         <div className="mx-auto max-w-6xl px-4 py-8 md:py-10">
           <div className="grid gap-6 md:grid-cols-[3fr,4fr] items-start">
             {/* ซ้าย: รูปโปสเตอร์ */}
@@ -183,33 +176,57 @@ export default function EventDetail() {
               </div>
 
               {/* เลือกประเภทบัตร + จำนวน */}
-              <div className="mt-4 space-y-3 rounded-2xl bg-white/5 p-4">
+              <div className="space-y-4 rounded-2xl bg-gray-800 opacity-70 p-4 border border-white/30 ">
                 <h2 className="text-sm font-semibold">
                   เลือกประเภทบัตรและจำนวน
                 </h2>
 
                 <div className="grid gap-3 md:grid-cols-[2fr,1fr] items-end">
+                  {/* ประเภทบัตร – Radix Select */}
                   <div className="space-y-2">
                     <label className="block text-xs text-slate-200">
                       ประเภทบัตร
                     </label>
-                    <select
-                      value={selectedTierName}
-                      onChange={(e) => {
-                        setSelectedTierName(e.target.value);
+
+                    <Select.Root
+                      value={selectedTierName || undefined}
+                      onValueChange={(value) => {
+                        setSelectedTierName(value);
                         setErrorMessage(null);
                       }}
-                      className="w-full rounded-lg border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/70"
                     >
-                      <option value="">เลือกประเภทบัตร</option>
-                      {event.prices.map((tier: PriceTier) => (
-                        <option key={tier.name} value={tier.name}>
-                          {tier.name} – {tier.price.toLocaleString()} บาท
-                        </option>
-                      ))}
-                    </select>
+                      {/* หุ้ม Trigger ให้เต็มความกว้าง */}
+                      <div className="w-full">
+                        <Select.Trigger
+                          placeholder="เลือกประเภทบัตร"
+                          style={{ width: "100%" }}
+                        />
+                      </div>
+
+                      <Select.Content
+                        className="
+                          border border-slate-700
+                          text-sm text-slate-50
+                          shadow-xl
+                        "
+                      >
+                        {event.prices.map((tier: PriceTier) => (
+                          <Select.Item
+                            key={tier.name}
+                            value={tier.name}
+                            className="
+                              px-3 py-1.5 cursor-pointer
+                              data-[highlighted]:bg-slate-700/60
+                            "
+                          >
+                            {tier.name} – {tier.price.toLocaleString()} บาท
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
+                    </Select.Root>
                   </div>
 
+                  {/* จำนวนบัตร */}
                   <div className="space-y-2">
                     <label className="block text-xs text-slate-200">
                       จำนวนบัตร
@@ -221,7 +238,14 @@ export default function EventDetail() {
                       onChange={(e) =>
                         setTicketQty(Math.max(1, Number(e.target.value) || 1))
                       }
-                      className="w-24 rounded-lg border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-400/70"
+                      className="
+                        w-24
+                          rounded-lg bg-white
+                          px-3 py-2
+                          text-sm text-slate-900
+                          focus:outline-none
+                          focus:ring-2 focus:ring-slate-700/60
+                      "
                     />
                   </div>
                 </div>

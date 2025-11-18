@@ -20,6 +20,9 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<
+    "mobile" | "card" | "onsite"
+  >("mobile");
 
   const navigate = useNavigate();
 
@@ -43,6 +46,7 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+
     if (items.length === 0) {
       alert("ยังไม่มีสินค้าในตะกร้า");
       return;
@@ -53,7 +57,23 @@ export default function CheckoutPage() {
       return;
     }
 
-    alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
+    const paymentLabel =
+      paymentMethod === "mobile"
+        ? "โอนผ่าน Mobile Banking"
+        : paymentMethod === "card"
+        ? "บัตรเครดิต / เดบิต"
+        : "จ่ายปลายทางที่หน้างาน (สำหรับบัตรงานแสดงที่รองรับ)";
+
+    alert(
+      [
+        "ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket",
+        "",
+        `ชื่อผู้ซื้อ: ${fullName}`,
+        `อีเมล: ${email}`,
+        `เบอร์โทรศัพท์: ${phone}`,
+        `วิธีชำระเงิน: ${paymentLabel}`,
+      ].join("\n")
+    );
 
     localStorage.removeItem("cartItems");
     navigate("/");
@@ -63,9 +83,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-slate-100">
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="mb-6 text-xl font-bold text-slate-900">
-          ชำระเงิน
-        </h1>
+        <h1 className="mb-6 text-xl font-bold text-slate-900">ชำระเงิน</h1>
 
         {items.length === 0 ? (
           <p className="text-sm text-slate-600">
@@ -95,9 +113,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm text-slate-700">
-                  อีเมล
-                </label>
+                <label className="block text-sm text-slate-700">อีเมล</label>
                 <input
                   type="email"
                   value={email}
@@ -142,17 +158,30 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="pay"
-                      defaultChecked
                       className="h-4 w-4"
+                      checked={paymentMethod === "mobile"}
+                      onChange={() => setPaymentMethod("mobile")}
                     />
                     โอนผ่าน Mobile Banking
                   </label>
                   <label className="flex items-center gap-2">
-                    <input type="radio" name="pay" className="h-4 w-4" />
+                    <input
+                      type="radio"
+                      name="pay"
+                      className="h-4 w-4"
+                      checked={paymentMethod === "card"}
+                      onChange={() => setPaymentMethod("card")}
+                    />
                     บัตรเครดิต / เดบิต
                   </label>
                   <label className="flex items-center gap-2">
-                    <input type="radio" name="pay" className="h-4 w-4" />
+                    <input
+                      type="radio"
+                      name="pay"
+                      className="h-4 w-4"
+                      checked={paymentMethod === "onsite"}
+                      onChange={() => setPaymentMethod("onsite")}
+                    />
                     จ่ายปลายทางที่หน้างาน (สำหรับบัตรงานแสดงที่รองรับ)
                   </label>
                 </div>

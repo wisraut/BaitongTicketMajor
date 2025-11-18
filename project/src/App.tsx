@@ -9,6 +9,7 @@ import PerformanceMenuPage from "./page/PerformanceMenu";
 import PaymentPage from "./page/Payment";
 import CartPage from "./page/Cart";
 import CheckoutPage from "./page/Checkout";
+import HistoryPage from "./page/History";
 
 
 
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/checkout" element={<CheckoutPage/>} />
       <Route path="*" element={<div className="p-6">404 Not Found</div>} />
+      <Route path="/History" element={<HistoryPage/>} />
     </Routes>
   );
 }
