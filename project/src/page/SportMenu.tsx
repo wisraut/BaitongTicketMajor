@@ -1,15 +1,8 @@
 import Section from "../components/useall/Section";
 import Footer from "../components/useall/Footer";
 import Header from "../components/useall/Header";
-import FrontBanner from "../components/useall/FrontBanner";
 import type { EventItem } from "../components/home/EventCard";
 import { EVENTS as SPORTS_EVENTS } from "../data/eventboxing";
-
-const slides = [
-  { id: 1, imageUrl: "/ball.jpg" },
-  { id: 2, imageUrl: "/concert.png" },
-  { id: 3, imageUrl: "/shirt.jpg" },
-];
 
 function toEventItem(event: any): EventItem {
   return {
@@ -29,10 +22,7 @@ export default function SportMenuPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
       <main>
-        <FrontBanner slides={slides} />
-
         <Section title="Sport Events" items={sportItems} />
-
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <hr className="my-6 border-slate-200" />
         </div>
