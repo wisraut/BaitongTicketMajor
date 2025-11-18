@@ -24,7 +24,8 @@ export default function CartPage() {
       if (Array.isArray(parsed)) {
         setItems(parsed);
       }
-    } catch {
+    } catch (err) {
+      console.error("Failed to parse cart items from localStorage", err);
     }
   }, []);
 

@@ -1,17 +1,12 @@
 import Section from "../components/useall/Section";
 import Footer from "../components/useall/Footer";
 import Header from "../components/useall/Header";
-import FrontBanner from "../components/useall/FrontBanner";
 import type { EventItem } from "../components/home/EventCard";
-import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
+import { EVENTS as PERFORMANCE_EVENTS,
+        type Event as PerformanceEvent,} 
+        from "../data/eventperformance";
 
-const slides = [
-  { id: 1, imageUrl: "/ball.jpg" },
-  { id: 2, imageUrl: "/concert.png" },
-  { id: 3, imageUrl: "/shirt.jpg" },
-];
-
-function toEventItem(event: any): EventItem {
+function toEventItem(event: PerformanceEvent): EventItem {
   return {
     id: event.id,
     image: event.banner,
@@ -29,7 +24,6 @@ export default function PerformanceMenuPage() {
     <div className="min-h-screen bg-white text-slate-900">
       <Header />
       <main>
-        <FrontBanner slides={slides} />
 
         <Section title="Recommended Events" items={performanceItems} />
 

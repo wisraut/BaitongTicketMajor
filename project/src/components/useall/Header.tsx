@@ -1,43 +1,29 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  ShoppingCart,
-  User,
-  Menu,
-  ChevronDown,
-  X,
-  Search,
-  LogOut,
-} from "lucide-react";
+import type { FormEvent } from "react";
+import { useLocation, Link, useNavigate } from "react-router-dom";
+import { User, Menu, ChevronDown, X, LogOut } from "lucide-react";
+import { TextField } from "@radix-ui/themes";
+import { FaShoppingCart, FaUserAlt, FaSearch } from "react-icons/fa";
 
-// เมนูหลัก
-const MENU_KEYS = ["events", "giftshop", "promo"] as const;
-type MenuKeyStrict = (typeof MENU_KEYS)[number];
-type MenuKey = MenuKeyStrict | null;
+const HeaderKey = ["events", "giftshop", "promo"] as const;
+type HeaderKey = (typeof HeaderKey)[number];
+type is_Headerkey = HeaderKey | null;
 
-// ทำให้แต่ละรายการมี path ของมันเอง
-const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
+const MENU_SECTIONS: Record<HeaderKey, { label: string; to: string }[]> = {
   events: [
     { label: "Concerts", to: "/concerts" },
     { label: "Sports", to: "/sports" },
     { label: "Performing Arts", to: "/performance" },
   ],
-  giftshop: [
-    { label: "T-Shirts", to: "/shop/tshirts" },
-    { label: "Merch Bundles", to: "/shop/bundles" },
-  ],
-  promo: [
-    { label: "Flash Sale", to: "/promo/flash" },
-    { label: "Season Pass", to: "/promo/season" },
-  ],
+  giftshop: [{ label: "Gift", to: "/shop/giftshop" }],
+  promo: [{ label: "Flash Sale", to: "/promo/flash" }],
 };
 
-// =============== dropdown desktop ===============
-const DesktopDrop: React.FC<{
+const TopDrop: React.FC<{
   label: string;
-  openKey: MenuKey;
-  me: MenuKeyStrict;
-  setOpen: (k: MenuKey) => void;
+  openKey: is_Headerkey;
+  me: HeaderKey;
+  setOpen: (k: is_Headerkey) => void;
 }> = ({ label, openKey, me, setOpen }) => {
   const isOpen = openKey === me;
   const items = MENU_SECTIONS[me];
@@ -86,27 +72,54 @@ const DesktopDrop: React.FC<{
   );
 };
 
-// =============== HEADER หลัก ===============
 export default function Header() {
-  const [openMenu, setOpenMenu] = useState<MenuKey>(null);
+  const [openMenu, setOpenMenu] = useState<is_Headerkey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [user, setUser] = useState<{ email: string; phone?: string } | null>(
-    null
-  );
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const [seaching, setSeaching] = useState("");
+
+  const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const q = seaching.trim();
+    const currentPath = location.pathname || "/";
+
+    if (!q) {
+      navigate(currentPath);
+      return;
+    }
+
+    navigate(`${currentPath}?seaching=${encodeURIComponent(q)}`);
+  };
+
+  const [user, setUser] = useState<{
+    name?: string;
+    email?: string;
+    uid?: string;
+  } | null>(null);
 
   const navRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const raw = localStorage.getItem("loggedInUser");
-    if (raw) {
-      try {
-        setUser(JSON.parse(raw));
-      } catch {
-        setUser(null);
-      }
+    if (!raw) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        name?: string;
+        email?: string;
+        uid?: string;
+      };
+      setUser(parsed);
+    } catch {
+      setUser(null);
     }
   }, []);
 
@@ -138,6 +151,9 @@ export default function Header() {
     navigate("/");
   };
 
+  const displayName =
+    user?.name && user.name.trim() !== "" ? user.name : user?.email ?? "";
+
   return (
     <header className="relative z-50 w-full bg-[#234C6A] text-white shadow-md">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
@@ -155,60 +171,76 @@ export default function Header() {
           </Link>
 
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">
-            <DesktopDrop
+            <TopDrop
               label="ทุกงานแสดง"
               openKey={openMenu}
               me="events"
               setOpen={setOpenMenu}
             />
-            <DesktopDrop
-              label="GiftShop"
-              openKey={openMenu}
-              me="giftshop"
-              setOpen={setOpenMenu}
-            />
-            <DesktopDrop
-              label="Promo"
-              openKey={openMenu}
-              me="promo"
-              setOpen={setOpenMenu}
-            />
+
+            <Link
+              to="/shop"
+              className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
+            >
+              GiftShop
+            </Link>
+
+            <Link
+              to="/promo/flash"
+              className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
+            >
+              Promo
+            </Link>
           </nav>
         </div>
 
         {/* right */}
         <div className="flex items-center gap-3">
-          <form className="relative hidden md:block">
-            <input
+          {/* search desktop (Radix) */}
+          <form className="hidden md:block" onSubmit={handleSearchSubmit}>
+            <TextField.Root
               type="search"
-              placeholder="ค้นหา…"
-              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70 text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 hover:bg-white/10"
+              placeholder="ค้นหา..."
+              value={seaching}
+              onChange={(e) => setSeaching(e.target.value)}
+              className="w-72 rounded-full bg-white/10 text-sm text-white placeholder:text-white/70 ring-1 ring-white/20 focus-within:ring-2 focus-within:ring-white/40"
             >
-              <Search className="h-5 w-5" />
-            </button>
+              <TextField.Slot side="right" className="pr-3 text-white/80">
+                <FaSearch className="h-4 w-4" />
+              </TextField.Slot>
+            </TextField.Root>
           </form>
 
-          <Link to="/cart" className="rounded-full p-2 hover:bg-white/10">
-            <ShoppingCart className="h-5 w-5" />
+          {/* cart – react-icons */}
+          <Link
+            to="/cart"
+            className="rounded-full p-2 hover:bg-white/10 flex items-center justify-center"
+          >
+            <FaShoppingCart className="h-5 w-5" />
           </Link>
 
-          {/* โปรไฟล์ */}
-          {user ? (
-            <div className="relative" ref={profileRef}>
+          {/* desktop login button */}
+          {!user && (
+            <Link
+              to="/login"
+              className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-[#234C6A] hover:bg-slate-100"
+            >
+              <FaUserAlt className="h-4 w-4" />
+              <span>Register / login</span>
+            </Link>
+          )}
+
+          {/* profile dropdown (ใช้ได้ทั้ง desktop + กด mobile icon ตอนล็อกอินแล้ว) */}
+          {user && (
+            <div className="relative hidden lg:block" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
+                className="flex rounded-full border border-white/20 items-center px-4 py-1.5 gap-2 text-sm hover:bg-white/10"
               >
-                <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="flex items-center h-6 w-6 rounded-full bg-white/20 justify-center">
                   <User className="h-4 w-4" />
                 </div>
-                <span className="max-w-[140px] truncate">
-                  {user.email || user.phone}
-                </span>
+                <span className="truncate max-w-[160px]">{displayName}</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
 
@@ -226,16 +258,9 @@ export default function Header() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link
-              to="/login"
-              className="hidden lg:flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
-            >
-              <User className="h-4 w-4" /> Register / login
-            </Link>
           )}
 
-          {/* mobile */}
+          {/* mobile menu button */}
           <button
             className="rounded-md p-2 hover:bg-white/10 lg:hidden"
             onClick={() => {
@@ -259,27 +284,67 @@ export default function Header() {
         }`}
       >
         <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
-          {MENU_KEYS.map((key) => (
-            <div key={key}>
-              <p className="mb-1 text-sm font-semibold text-white/80">
-                {key === "events"
-                  ? "ทุกงานแสดง"
-                  : key === "giftshop"
-                  ? "GiftShop"
-                  : "Promo"}
-              </p>
-              {MENU_SECTIONS[key].map((item) => (
-                <Link
-                  key={`${key}-${item.to}`}
-                  to={item.to}
-                  className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
-                  onClick={() => setMobileOpen(false)}
+          <div>
+            <p className="mb-1 text-sm font-semibold text-white/80">
+              ทุกงานแสดง
+            </p>
+            {MENU_SECTIONS.events.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block pl-3 text-base text-white/90 hover:bg-white/10 rounded-lg py-2"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          <Link
+            to="/shop"
+            className="text-sm font-semibold text-white/80 block"
+            onClick={() => setMobileOpen(false)}
+          >
+            GiftShop
+          </Link>
+
+          <Link
+            to="/promo"
+            className="text-sm font-semibold text-white/80 block"
+            onClick={() => setMobileOpen(false)}
+          >
+            Promo
+          </Link>
+
+          {/* แถวล่างสำหรับ login / account บน mobile */}
+          <div className="pt-3 border-t border-white/15">
+            {user ? (
+              <div className="space-y-2 text-sm text-white/90">
+                <p className="text-xs text-white/70">
+                  {displayName}
+                </p>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
                 >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-[#234C6A] hover:bg-slate-100"
+              >
+                <FaUserAlt className="h-4 w-4" />
+                <span>Register / login</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

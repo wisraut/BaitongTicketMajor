@@ -2,16 +2,35 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
-import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
-import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
-import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
-const ALL_EVENTS = [...CONCERT_EVENTS, ...BOXING_EVENTS, ...PERFORMANCE_EVENTS];
+import {
+  EVENTS as CONCERT_EVENTS,
+  type Event as ConcertEvent,
+} from "../data/eventconcert";
+import {
+  EVENTS as BOXING_EVENTS,
+  type Event as BoxingEvent,
+} from "../data/eventboxing";
+import {
+  EVENTS as PERFORMANCE_EVENTS,
+  type Event as PerformanceEvent,
+} from "../data/eventperformance";
 
-type PriceTier = (typeof ALL_EVENTS)[number]["prices"][number];
+// รวม type งานทุกหมวดเป็นตัวเดียว
+type AnyEvent = ConcertEvent | BoxingEvent | PerformanceEvent;
+
+// รวมรายการ event ทั้งหมด
+const ALL_EVENTS: AnyEvent[] = [
+  ...CONCERT_EVENTS,
+  ...BOXING_EVENTS,
+  ...PERFORMANCE_EVENTS,
+];
+
+// ดึง type ราคาต่อ tier จาก event จริง
+type PriceTier = AnyEvent["prices"][number];
 
 export default function PaymentPage() {
-  const [event, setEvent] = useState<(typeof ALL_EVENTS)[number] | null>(null);
+  const [event, setEvent] = useState<AnyEvent | null>(null);
   const [selectedTier, setSelectedTier] = useState<PriceTier | null>(null);
   const [qty, setQty] = useState(1);
   const navigate = useNavigate();
@@ -39,21 +58,21 @@ export default function PaymentPage() {
   }
 
   const handleConfirmPayment = () => {
-    if (!selectedTier) {
-      return;
-    }
+    if (!selectedTier) return;
+
     const payload = {
       eventId: event.id,
       eventTitle: event.title,
-      dateRange: (event as any).dateRange,
-      time: (event as any).Time,
-      venue: (event as any).venue,
+      dateRange: event.dateRange,
+      time: event.Time,
+      venue: event.venue,
       banner: event.banner,
       tierName: selectedTier.name,
       price: selectedTier.price,
       quantity: qty,
       total: selectedTier.price * qty,
     };
+
     localStorage.setItem("lastOrder", JSON.stringify(payload));
     localStorage.removeItem("currentEventId");
     navigate("/");
@@ -63,9 +82,11 @@ export default function PaymentPage() {
 
   return (
     <div className="min-h-screen bg-slate-100">
-      <Header/>
+      <Header />
       <div className="max-w-4xl mx-auto px-4 py-8 grid gap-6 md:grid-cols-3">
+        {/* ซ้าย: ข้อมูลงาน + ฟอร์มผู้ซื้อ + เลือกโซน/จำนวน */}
         <div className="md:col-span-2 space-y-4">
+          {/* ข้อมูลงาน */}
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex gap-4">
             {event.banner && (
               <img
@@ -77,22 +98,23 @@ export default function PaymentPage() {
             <div className="flex-1 text-sm space-y-1">
               <p className="text-xs uppercase text-slate-400">{event.id}</p>
               <p className="font-semibold text-slate-900">{event.title}</p>
-              {(event as any).dateRange && (
+              {event.dateRange && (
                 <p className="text-slate-600">
-                  วันจัดงาน {(event as any).dateRange}
+                  วันจัดงาน {event.dateRange}
                 </p>
               )}
-              {(event as any).Time && (
-                <p className="text-slate-600">เวลา {(event as any).Time}</p>
+              {event.Time && (
+                <p className="text-slate-600">เวลา {event.Time}</p>
               )}
-              {(event as any).venue && (
+              {event.venue && (
                 <p className="text-slate-600">
-                  สถานที่จัดงาน {(event as any).venue}
+                  สถานที่จัดงาน {event.venue}
                 </p>
               )}
             </div>
           </div>
 
+          {/* ฟอร์มข้อมูลผู้ซื้อ + เลือก zone / qty */}
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 space-y-4 text-sm">
             <h2 className="font-semibold text-slate-900">ข้อมูลผู้ซื้อ</h2>
             <div className="grid gap-3 md:grid-cols-2">
@@ -166,6 +188,7 @@ export default function PaymentPage() {
           </div>
         </div>
 
+        {/* ขวา: สรุปคำสั่งซื้อ */}
         <div className="md:col-span-1">
           <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 space-y-3 text-sm">
             <h2 className="font-semibold text-slate-900">สรุปคำสั่งซื้อ</h2>
@@ -204,7 +227,7 @@ export default function PaymentPage() {
           </div>
         </div>
       </div>
-      <Footer/>
+      <Footer />
     </div>
   );
 }

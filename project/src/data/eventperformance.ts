@@ -29,7 +29,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -44,7 +48,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -59,7 +67,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -74,7 +86,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },{
     id: "mysticuniverse360",
@@ -88,7 +104,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },{
     id: "snoopy",
@@ -102,7 +122,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขในการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "FREE ACCESS", price: 0 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
 ];

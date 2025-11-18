@@ -23,9 +23,15 @@ const LoginForm: React.FC<LoginFormProps> = (props) => {
     try {
       const result = await logIn(email, password);
 
+      const displayName =
+        result.user.displayName && result.user.displayName.trim() !== ""
+          ? result.user.displayName
+          : email;
+
       localStorage.setItem(
         "loggedInUser",
         JSON.stringify({
+          name: displayName,
           email: result.user.email,
           uid: result.user.uid,
         })
@@ -39,74 +45,74 @@ const LoginForm: React.FC<LoginFormProps> = (props) => {
     }
   };
 
+  // ให้เหมือน regis: ใช้สี่เหลี่ยมมุมโค้งนิดหน่อย
   const fieldClass =
-    "w-full rounded-full px-4 py-2 text-[15px] text-slate-700 " +
-    "bg-[#f4f5f8] border border-slate-200/80 " +
-    "shadow-[inset_2px_2px_4px_rgba(0,0,0,0.12),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] " +
-    "outline-none placeholder:text-slate-500 " +
-    "focus:ring-2 focus:ring-blue-400/70 focus:border-blue-400 transition";
+    "w-full rounded-lg border border-slate-300 bg-slate-100/80 px-4 py-2.5 " +
+    "text-[15px] text-slate-800 placeholder:text-slate-400 " +
+    "focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300";
 
-  // ⭐ ปุ่มที่ Register ใช้อยู่
   const actionBtn =
-    "px-8 py-2 rounded-full text-sm font-semibold text-[#2f3d6b] " +
-    "bg-transparent hover:bg-[#e4ecff] active:bg-[#d4e0ff] " +
-    "transition-all duration-150 disabled:opacity-60";
+    "inline-flex items-center justify-center rounded-full px-8 py-2.5 text-sm font-semibold " +
+    "bg-slate-900 text-slate-50 hover:bg-slate-800 " +
+    "disabled:bg-slate-400 disabled:cursor-not-allowed transition";
 
   return (
-      <div
-        className="
-          w-[380px] max-w-[92vw]
-          rounded-[32px]
-          p-8
-          bg-[#e3e6eb]
-          shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]"
-      >
+    <div className="w-[400px] max-w-[92vw] rounded-3xl bg-slate-50 px-7 py-6 shadow-md ring-1 ring-slate-200">
       <form onSubmit={handleSubmit} className="space-y-5">
-        <h2 className="text-center text-4xl font-extrabold text-[#3c455e] tracking-wide">
-          Login
-        </h2>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold text-slate-900">เข้าสู่ระบบ</h2>
+          {/* <p className="text-xs text-slate-500">
+            ใช้อีเมลที่คุณสมัคร BaiTongTicket ไว้
+          </p> */}
+        </div>
 
         {errorMsg && (
-          <Text as="p" className="text-center text-[15px] font-medium text-red-600">
+          <Text
+            as="p"
+            className="rounded-xl bg-red-50 px-3 py-2 text-[13px] font-medium text-red-700"
+          >
             {errorMsg}
           </Text>
         )}
 
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(evt) => setEmail(evt.target.value)}
-          placeholder="Email"
-          className={fieldClass}
-        />
-
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(evt) => setPassword(evt.target.value)}
-          placeholder="Password"
-          className={fieldClass}
-        />
-
-        <div className="pt-1 flex justify-center">
-          <button
-            type="submit"
-            disabled={submitting}
-            className={actionBtn}
-          >
-            {submitting ? "กำลังเข้าสู่ระบบ..." : "Login"}
-          </button>
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-slate-600">
+            Email
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(evt) => setEmail(evt.target.value)}
+            placeholder="Your@email.com"
+            className={fieldClass}
+          />
         </div>
 
-        <div className="text-center">
+        <div className="space-y-1.5">
+          <label className="block text-xs font-medium text-slate-600">
+            Password
+          </label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(evt) => setPassword(evt.target.value)}
+            placeholder="Password"
+            className={fieldClass}
+          />
+        </div>
+
+        <div className="pt-1 flex items-center justify-between">
+          <button type="submit" disabled={submitting} className={actionBtn}>
+            {submitting ? "กำลังเข้าสู่ระบบ..." : "Login"}
+          </button>
           <button
             type="button"
             onClick={props.onSwitch}
-            className="text-sm font-semibold text-red-700 hover:underline"
+            className="text-xs font-semibold text-slate-600 hover:text-slate-900 hover:underline"
           >
-            Register
+            สมัครสมาชิก
           </button>
         </div>
       </form>

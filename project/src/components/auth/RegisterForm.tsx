@@ -20,22 +20,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
     evt.preventDefault();
     setErrorMsg(null);
 
-    // ตรวจรหัสผ่านตรงกันไหม
     if (password !== currentPassword) {
       setErrorMsg("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
       return;
     }
 
     setLoading(true);
-    try {
-      // สมัครด้วย Firebase Auth ผ่าน context
-      await signUp(email, password);
-      // ถ้าต้องเก็บ name เพิ่ม สามารถไป set ใน Firestore / profile ภายหลังได้
 
-      // สมัครเสร็จ → เด้งกลับไปหน้า Login
+    try {
+      const trimmedName = name.trim();
+      await signUp(email, password, trimmedName || email);
+
       onSwitch?.();
     } catch (err) {
       let message = "สมัครสมาชิกไม่สำเร็จ";
+
       if (typeof err === "object" && err !== null && "code" in err) {
         const fbErr = err as FirebaseError;
         switch (fbErr.code) {
@@ -52,103 +51,103 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
             message = fbErr.code;
         }
       }
+
       setErrorMsg(message);
     } finally {
       setLoading(false);
     }
   };
 
+  // เปลี่ยนจาก rounded-full -> rounded-lg ให้เป็นสี่เหลี่ยมธรรมดา
   const fieldClass =
-    "w-full rounded-full px-4 py-2 text-[15px] text-slate-700 " +
-    "bg-[#f4f5f8] border border-slate-200/80 " +
-    "shadow-[inset_2px_2px_4px_rgba(0,0,0,0.12),inset_-2px_-2px_4px_rgba(255,255,255,0.9)] " +
-    "outline-none placeholder:text-slate-500 " +
-    "focus:ring-2 focus:ring-blue-400/70 focus:border-blue-400 transition";
+    "w-full rounded-lg border border-slate-300 bg-slate-100/80 px-4 py-2.5 " +
+    "text-[15px] text-slate-800 placeholder:text-slate-400 " +
+    "focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300";
 
   return (
-    <div
-        className="
-          w-[380px] max-w-[92vw]
-          rounded-[32px]
-          p-8
-          bg-[#e3e6eb]
-          shadow-[inset_4px_4px_10px_rgba(0,0,0,0.13),inset_-4px_-4px_10px_rgba(255,255,255,0.85)]"
-    >
-      <h2 className="mb-5 text-center text-4xl font-extrabold text-[#3c455e] tracking-wide">
-        Register
-      </h2>
-
+    <div className="w-[400px] max-w-[92vw] rounded-3xl bg-slate-50 px-7 py-6 shadow-md ring-1 ring-slate-200">
+      <h2 className="text-xl font-bold text-slate-900">สมัครสมาชิก</h2>
+      
       {errorMsg && (
-        <p className="mb-2 text-center text-[15px] font-medium text-red-600">
+        <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-[13px] font-medium text-red-700">
           {errorMsg}
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Name"
-          className={fieldClass}
-        />
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-slate-600">
+            Name
+          </label>
+          <input
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your Name"
+            className={fieldClass}
+          />
+        </div>
 
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className={fieldClass}
-        />
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-slate-600">
+            Email
+          </label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your@email.com"
+            className={fieldClass}
+          />
+        </div>
 
-        <input
-          type="password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className={fieldClass}
-        />
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-slate-600">
+            Password
+          </label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="อย่างน้อย 6 ตัวอักษร"
+            className={fieldClass}
+          />
+        </div>
 
-        <input
-          type="password"
-          required
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          placeholder="Current Password"
-          className={fieldClass}
-        />
+        <div className="space-y-1">
+          <label className="block text-xs font-medium text-slate-600">
+            ConfirmPassword
+          </label>
+          <input
+            type="password"
+            required
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="พิมพ์รหัสผ่านซ้ำอีกครั้ง"
+            className={fieldClass}
+          />
+        </div>
 
-        <div className="flex justify-center pt-2">
+        <div className="flex items-center justify-between pt-2">
           <button
             type="submit"
             disabled={loading}
-            className="
-              px-8 py-2 rounded-full
-              text-sm font-semibold
-              text-[#2f3d6b]
-              bg-transparent
-              hover:bg-[#e4ecff]
-              active:bg-[#d4e0ff]
-              disabled:opacity-60
-              transition-all duration-150
-            "
+            className="rounded-full bg-slate-900 px-7 py-2.5 text-sm font-semibold text-slate-50 hover:bg-slate-800 disabled:bg-slate-400 disabled:cursor-not-allowed transition"
           >
             {loading ? "กำลังสมัคร..." : "Register"}
           </button>
+
+          <button
+            type="button"
+            onClick={onSwitch}
+            className="text-xs font-semibold text-slate-600 hover:text-slate-900 hover:underline"
+          >
+            Login
+          </button>
         </div>
       </form>
-
-      <div className="mt-4 text-center">
-        <button
-          type="button"
-          onClick={onSwitch}
-          className="text-sm font-semibold text-red-700 hover:underline"
-        >
-          Login
-        </button>
-      </div>
     </div>
   );
 };

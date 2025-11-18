@@ -19,13 +19,13 @@ const EventCard: React.FC<{ item: EventItem }> = ({ item }) => {
   return (
     <Link
       to={href}
-      className="group rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md block"
+      className="group rounded-2xl border border-white transition hover:-translate-y-0.5 hover:shadow-md block"
     >
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-t-2xl">
         <img
           src={item.image}
           alt={item.title}
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          className="h-full w-full group-hover:scale-105 duration-300 transition  object-cover"
         />
         {item.badge && (
           <span className="absolute left-2 top-2 rounded-full bg-amber-400/95 px-2 py-0.5 text-xs font-semibold text-slate-900">

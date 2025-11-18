@@ -1,4 +1,5 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
@@ -30,7 +31,8 @@ export default function CheckoutPage() {
       if (Array.isArray(parsed)) {
         setItems(parsed);
       }
-    } catch {
+    } catch (err) {
+      console.error("Failed to parse cart items from localStorage", err);
     }
   }, []);
 

@@ -45,9 +45,11 @@ export const EVENTS: Event[] = [
 
 `,
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -60,7 +62,13 @@ export const EVENTS: Event[] = [
     banner: "/banners/concert/oasis.png",
     stageImage: "/stages/flat.png",
     description: "รายละเอียดงานสินค้า, เวลาจัดงาน, เงื่อนไขการแลกคิว, ฯลฯ",
-    prices: [{ name: "Entry", price: 0 }],
+    prices: [
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
+    ],
   },
   {
     id: "Bangsaen Fest",
@@ -72,10 +80,12 @@ export const EVENTS: Event[] = [
     banner: "/banners/concert/BangsaenFest.png",
     stageImage: "/stages/flat.png",
     description: "รายละเอียดงานสินค้า, เวลาจัดงาน, เงื่อนไขการแลกคิว, ฯลฯ",
-    prices:[
-      { name: "VIP", price: 12900 },
-      { name: "A", price: 2190 },
-      { name: "B", price: 1790 },
+    prices: [
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -88,7 +98,7 @@ export const EVENTS: Event[] = [
     banner: "/banners/concert/CMFeast.jpg",
     stageImage: "/stages/flat.png",
     description: "รายละเอียดงานสินค้า, เวลาจัดงาน, เงื่อนไขการแลกคิว, ฯลฯ",
-    prices: [{ name: "Pro Chang", price: 1450 }],
+    prices: [{ name: "Pro Chang", price: 1500 }],
   },
   {
     id: "2025-bambam-hometown-concert-in-bangkok",
@@ -114,9 +124,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -131,9 +143,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -148,9 +162,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -165,9 +181,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -182,9 +200,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -199,9 +219,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -216,9 +238,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -233,9 +257,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -250,9 +276,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
   {
@@ -267,9 +295,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อบัตร / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
   },
 ];

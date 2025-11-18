@@ -30,11 +30,11 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       "เงื่อนไขการซื้อสินค้า / ช่องทางชำระเงิน / สิ่งที่ควรรู้ก่อนสั่งซื้อ ฯลฯ",
     variants: [
-      { id: "small", label: "Small", price: 1500 },
-      { id: "medium", label: "Medium", price: 2000 },
-      { id: "large", label: "Large", price: 2000 },
-      { id: "xl", label: "Extra Large", price: 3000 },
-      { id: "xxl", label: "Double Extra Large", price: 3500 },
+      { id: "small", label: "S", price: 1500 },
+      { id: "medium", label: "L", price: 2000 },
+      { id: "large", label: "XL", price: 2000 },
+      { id: "xxl", label: "XXL", price: 3000 },
+      { id: "2xl", label: "2XL", price: 3500 },
     ],
     details: [
       "เสื้อยืดคอกลมลิขสิทธิ์แท้",
@@ -54,11 +54,11 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       "เงื่อนไขการซื้อสินค้า / ช่องทางชำระเงิน / สิ่งที่ควรรู้ก่อนสั่งซื้อ ฯลฯ",
     variants: [
-      { id: "small", label: "Small", price: 1500 },
-      { id: "medium", label: "Medium", price: 2000 },
-      { id: "large", label: "Large", price: 2000 },
-      { id: "xl", label: "Extra Large", price: 3000 },
-      { id: "xxl", label: "Double Extra Large", price: 3500 },
+      { id: "small", label: "S", price: 1500 },
+      { id: "medium", label: "L", price: 2000 },
+      { id: "large", label: "XL", price: 2000 },
+      { id: "xl", label: "XXL", price: 3000 },
+      { id: "2xl", label: "2XL", price: 3500 },
     ],
     details: [
       "เสื้อยืดลิขสิทธิ์ BLACKPINK",
@@ -79,15 +79,64 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     description:
       "เงื่อนไขการซื้อสินค้า / ช่องทางชำระเงิน / สิ่งที่ควรรู้ก่อนสั่งซื้อ ฯลฯ",
     variants: [
-      { id: "small", label: "Small", price: 1500 },
-      { id: "medium", label: "Medium", price: 2000 },
-      { id: "large", label: "Large", price: 2000 },
-      { id: "xl", label: "Extra Large", price: 3000 },
-      { id: "xxl", label: "Double Extra Large", price: 3500 },
+      { id: "small", label: "S", price: 1500 },
+      { id: "medium", label: "L", price: 2000 },
+      { id: "large", label: "XL", price: 2000 },
+      { id: "xl", label: "XXL", price: 3000 },
+      { id: "2xl", label: "2XL", price: 3500 },
     ],
     details: [
       "เสื้อยืดลิขสิทธิ์ My Chemical Romance",
       "เหมาะสำหรับแฟนวงและสะสมเป็นของที่ระลึก",
     ],
   },
+  {
+    id: "Red-Hot-Chili-Peppers-Getaway-Album-Asterisk-T-Shirt",
+    name: "Red Hot Chili Peppers - Getaway Album Asterisk T-Shirt",
+    subtitle:
+      "This is a 100% official licensed short sleeved Red Hot Chili Peppers t-shirt.",
+    banner: "/banners/giftshop/RedHotShirt.jpg",
+    images: [
+      "/banners/giftshop/RedHotShirt.jpg",
+    ],
+    category: "tshirt",
+    description:
+      "เงื่อนไขการซื้อสินค้า / ช่องทางชำระเงิน / สิ่งที่ควรรู้ก่อนสั่งซื้อ ฯลฯ",
+    variants: [
+      { id: "small", label: "S", price: 1500 },
+      { id: "medium", label: "L", price: 2000 },
+      { id: "large", label: "XL", price: 2000 },
+      { id: "xxl", label: "XXL", price: 3000 },
+      { id: "2xl", label: "2XL", price: 3500 },
+    ],
+    details: [
+      "เสื้อยืดคอกลมลิขสิทธิ์แท้",
+      "เหมาะสำหรับแฟนเพลง Red Hot Chili Peppers",
+    ],
+  },
+  {
+    id: "Red-Hot-Chili-Peppers-Getaway-Album-Asterisk-T-Shirt",
+    name: "Red Hot Chili Peppers - Getaway Album Asterisk T-Shirt",
+    subtitle:
+      "This is a 100% official licensed short sleeved Red Hot Chili Peppers t-shirt.",
+    banner: "/banners/giftshop/RedHotShirt.jpg",
+    images: [
+      "/banners/giftshop/RedHotShirt.jpg",
+    ],
+    category: "tshirt",
+    description:
+      "เงื่อนไขการซื้อสินค้า / ช่องทางชำระเงิน / สิ่งที่ควรรู้ก่อนสั่งซื้อ ฯลฯ",
+    variants: [
+      { id: "small", label: "S", price: 1500 },
+      { id: "medium", label: "L", price: 2000 },
+      { id: "large", label: "XL", price: 2000 },
+      { id: "xxl", label: "XXL", price: 3000 },
+      { id: "2xl", label: "2XL", price: 3500 },
+    ],
+    details: [
+      "เสื้อยืดคอกลมลิขสิทธิ์แท้",
+      "เหมาะสำหรับแฟนเพลง Red Hot Chili Peppers",
+    ],
+  },
 ]
+
