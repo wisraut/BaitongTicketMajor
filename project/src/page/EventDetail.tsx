@@ -134,11 +134,12 @@ export default function EventDetail() {
     setErrorMessage(null);
     navigate("/cart");
   };
-
+  const selectTier = event.prices.find(
+    (p) => p.name === selectedTierName
+  );
   const totalPreview =
-    selectedTierName && ticketQty > 0
-      ? (event.prices.find((p) => p.name === selectedTierName)?.price ?? 0) *
-        ticketQty
+    selectTier && ticketQty > 0
+      ? selectTier.price * ticketQty
       : 0;
 
   return (
