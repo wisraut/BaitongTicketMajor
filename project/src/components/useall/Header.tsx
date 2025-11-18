@@ -1,15 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
-import {
-  ShoppingCart,
-  User,
-  Menu,
-  ChevronDown,
-  X,
-  Search,
-  LogOut,
-} from "lucide-react";
+import { User, Menu, ChevronDown, X, LogOut } from "lucide-react";
+import { TextField } from "@radix-ui/themes";
+import { FaShoppingCart, FaUserAlt, FaSearch } from "react-icons/fa";
 
 const HeaderKey = ["events", "giftshop", "promo"] as const;
 type HeaderKey = (typeof HeaderKey)[number];
@@ -177,7 +171,6 @@ export default function Header() {
           </Link>
 
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">
-            {/* dropdown ทุกงานแสดง */}
             <TopDrop
               label="ทุกงานแสดง"
               openKey={openMenu}
@@ -185,7 +178,6 @@ export default function Header() {
               setOpen={setOpenMenu}
             />
 
-            {/* GiftShop เป็นปุ่มธรรมดา */}
             <Link
               to="/shop"
               className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
@@ -193,7 +185,6 @@ export default function Header() {
               GiftShop
             </Link>
 
-            {/* Promo เป็นปุ่มธรรมดา */}
             <Link
               to="/promo/flash"
               className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
@@ -205,33 +196,43 @@ export default function Header() {
 
         {/* right */}
         <div className="flex items-center gap-3">
-          {/* search เดสก์ท็อป */}
-          <form
-            className="relative hidden md:block"
-            onSubmit={handleSearchSubmit}
-          >
-            <input
+          {/* search desktop (Radix) */}
+          <form className="hidden md:block" onSubmit={handleSearchSubmit}>
+            <TextField.Root
               type="search"
-              placeholder="ค้นหา…"
+              placeholder="ค้นหา..."
               value={seaching}
               onChange={(e) => setSeaching(e.target.value)}
-              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70 text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
-            />
-            <button
-              type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 hover:bg-white/10"
+              className="w-72 rounded-full bg-white/10 text-sm text-white placeholder:text-white/70 ring-1 ring-white/20 focus-within:ring-2 focus-within:ring-white/40"
             >
-              <Search className="h-5 w-5" />
-            </button>
+              <TextField.Slot side="right" className="pr-3 text-white/80">
+                <FaSearch className="h-4 w-4" />
+              </TextField.Slot>
+            </TextField.Root>
           </form>
 
-          <Link to="/cart" className="rounded-full p-2 hover:bg-white/10">
-            <ShoppingCart className="h-5 w-5" />
+          {/* cart – react-icons */}
+          <Link
+            to="/cart"
+            className="rounded-full p-2 hover:bg-white/10 flex items-center justify-center"
+          >
+            <FaShoppingCart className="h-5 w-5" />
           </Link>
 
-          {/* โปรไฟล์ */}
-          {user ? (
-            <div className="relative" ref={profileRef}>
+          {/* desktop login button */}
+          {!user && (
+            <Link
+              to="/login"
+              className="hidden lg:inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-[#234C6A] hover:bg-slate-100"
+            >
+              <FaUserAlt className="h-4 w-4" />
+              <span>Register / login</span>
+            </Link>
+          )}
+
+          {/* profile dropdown (ใช้ได้ทั้ง desktop + กด mobile icon ตอนล็อกอินแล้ว) */}
+          {user && (
+            <div className="relative hidden lg:block" ref={profileRef}>
               <button
                 onClick={() => setProfileOpen((v) => !v)}
                 className="flex rounded-full border border-white/20 items-center px-4 py-1.5 gap-2 text-sm hover:bg-white/10"
@@ -257,16 +258,9 @@ export default function Header() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link
-              to="/login"
-              className="hidden lg:flex items-center gap-2 rounded-full border border-white/20 px-4 py-1.5 text-sm hover:bg-white/10"
-            >
-              <User className="h-4 w-4" /> Register / login
-            </Link>
           )}
 
-          {/* mobile */}
+          {/* mobile menu button */}
           <button
             className="rounded-md p-2 hover:bg-white/10 lg:hidden"
             onClick={() => {
@@ -283,14 +277,13 @@ export default function Header() {
         </div>
       </div>
 
-            {/* MOBILE MENU */}
+      {/* MOBILE MENU */}
       <div
         className={`lg:hidden border-t border-white/10 bg-[#234C6A] shadow-lg transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
           mobileOpen ? "max-h-[70vh] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
-          {/* ทุกงานแสดง + ประเภท */}
           <div>
             <p className="mb-1 text-sm font-semibold text-white/80">
               ทุกงานแสดง
@@ -307,7 +300,6 @@ export default function Header() {
             ))}
           </div>
 
-          {/* GiftShop แสดงแบบหัวข้อเหมือนทุกงานแสดง แต่ยังคลิกได้ */}
           <Link
             to="/shop"
             className="text-sm font-semibold text-white/80 block"
@@ -316,7 +308,6 @@ export default function Header() {
             GiftShop
           </Link>
 
-          {/* Promo แสดงแบบหัวข้อเหมือนทุกงานแสดง แต่ยังคลิกได้ */}
           <Link
             to="/promo"
             className="text-sm font-semibold text-white/80 block"
@@ -324,6 +315,36 @@ export default function Header() {
           >
             Promo
           </Link>
+
+          {/* แถวล่างสำหรับ login / account บน mobile */}
+          <div className="pt-3 border-t border-white/15">
+            {user ? (
+              <div className="space-y-2 text-sm text-white/90">
+                <p className="text-xs text-white/70">
+                  {displayName}
+                </p>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileOpen(false);
+                  }}
+                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="inline-flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-[#234C6A] hover:bg-slate-100"
+              >
+                <FaUserAlt className="h-4 w-4" />
+                <span>Register / login</span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
     </header>

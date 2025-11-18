@@ -62,7 +62,13 @@ export const EVENTS: Event[] = [
     banner: "/banners/concert/oasis.png",
     stageImage: "/stages/flat.png",
     description: "รายละเอียดงานสินค้า, เวลาจัดงาน, เงื่อนไขการแลกคิว, ฯลฯ",
-    prices: [{ name: "Entry", price: 0 }],
+    prices: [
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
+    ],
   },
   {
     id: "Bangsaen Fest",
@@ -92,7 +98,7 @@ export const EVENTS: Event[] = [
     banner: "/banners/concert/CMFeast.jpg",
     stageImage: "/stages/flat.png",
     description: "รายละเอียดงานสินค้า, เวลาจัดงาน, เงื่อนไขการแลกคิว, ฯลฯ",
-    prices: [{ name: "Pro Chang", price: 1450 }],
+    prices: [{ name: "Pro Chang", price: 1500 }],
   },
   {
     id: "2025-bambam-hometown-concert-in-bangkok",

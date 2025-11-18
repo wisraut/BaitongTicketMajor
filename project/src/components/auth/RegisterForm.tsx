@@ -58,18 +58,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
     }
   };
 
+  // เปลี่ยนจาก rounded-full -> rounded-lg ให้เป็นสี่เหลี่ยมธรรมดา
   const fieldClass =
-    "w-full rounded-full border border-slate-300 bg-slate-100/80 px-4 py-2.5 " +
+    "w-full rounded-lg border border-slate-300 bg-slate-100/80 px-4 py-2.5 " +
     "text-[15px] text-slate-800 placeholder:text-slate-400 " +
     "focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-300";
 
   return (
     <div className="w-[400px] max-w-[92vw] rounded-3xl bg-slate-50 px-7 py-6 shadow-md ring-1 ring-slate-200">
-      <h2 className="text-xl font-bold text-slate-900">สมัครสมาชิกใหม่</h2>
-      <p className="mb-4 mt-1 text-xs text-slate-500">
-        กรอกข้อมูลให้ครบถ้วนเพื่อสร้างบัญชี BaiTongTicket
-      </p>
-
+      <h2 className="text-xl font-bold text-slate-900">สมัครสมาชิก</h2>
+      
       {errorMsg && (
         <p className="mb-3 rounded-xl bg-red-50 px-3 py-2 text-[13px] font-medium text-red-700">
           {errorMsg}
@@ -85,7 +83,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitch }) => {
             required
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
+            placeholder="Your Name"
             className={fieldClass}
           />
         </div>

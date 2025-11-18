@@ -28,7 +28,7 @@ export default function App() {
       <Route path="/events/:id" element={<EventDetail />} />
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/checkout" element={<CheckoutPage/>} />
-
+      <Route path="*" element={<div className="p-6">404 Not Found</div>} />
     </Routes>
   );
 }
