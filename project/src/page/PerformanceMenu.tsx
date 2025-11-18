@@ -2,9 +2,11 @@ import Section from "../components/useall/Section";
 import Footer from "../components/useall/Footer";
 import Header from "../components/useall/Header";
 import type { EventItem } from "../components/home/EventCard";
-import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
+import { EVENTS as PERFORMANCE_EVENTS,
+        type Event as PerformanceEvent,} 
+        from "../data/eventperformance";
 
-function toEventItem(event: any): EventItem {
+function toEventItem(event: PerformanceEvent): EventItem {
   return {
     id: event.id,
     image: event.banner,

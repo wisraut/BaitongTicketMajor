@@ -11,30 +11,25 @@ import {
   LogOut,
 } from "lucide-react";
 
-const MENU_KEYS = ["events", "giftshop", "promo"] as const;
-type MenuKeyStrict = (typeof MENU_KEYS)[number];
-type MenuKey = MenuKeyStrict | null;
+const HeaderKey = ["events", "giftshop", "promo"] as const;
+type HeaderKey = (typeof HeaderKey)[number];
+type is_Headerkey = HeaderKey | null;
 
-const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
+const MENU_SECTIONS: Record<HeaderKey, { label: string; to: string }[]> = {
   events: [
     { label: "Concerts", to: "/concerts" },
     { label: "Sports", to: "/sports" },
     { label: "Performing Arts", to: "/performance" },
   ],
-  giftshop: [
-    { label: "T-Shirts", to: "/shop/tshirts" },
-    { label: "Merch Bundles", to: "/shop/bundles" },
-  ],
-  promo: [
-    { label: "Flash Sale", to: "/promo/flash" },
-  ],
+  giftshop: [{ label: "Gift", to: "/shop/giftshop" }],
+  promo: [{ label: "Flash Sale", to: "/promo/flash" }],
 };
 
 const TopDrop: React.FC<{
   label: string;
-  openKey: MenuKey;
-  me: MenuKeyStrict;
-  setOpen: (k: MenuKey) => void;
+  openKey: is_Headerkey;
+  me: HeaderKey;
+  setOpen: (k: is_Headerkey) => void;
 }> = ({ label, openKey, me, setOpen }) => {
   const isOpen = openKey === me;
   const items = MENU_SECTIONS[me];
@@ -84,14 +79,13 @@ const TopDrop: React.FC<{
 };
 
 export default function Header() {
-  const [openMenu, setOpenMenu] = useState<MenuKey>(null);
+  const [openMenu, setOpenMenu] = useState<is_Headerkey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
 
-  // คำค้น (สะกดตามที่คุณอยากใช้)
   const [seaching, setSeaching] = useState("");
 
   const handleSearchSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -100,7 +94,6 @@ export default function Header() {
     const currentPath = location.pathname || "/";
 
     if (!q) {
-      // ถ้าลบคำค้น → กลับ path เดิมแบบไม่ใส่ query
       navigate(currentPath);
       return;
     }
@@ -165,9 +158,7 @@ export default function Header() {
   };
 
   const displayName =
-    user?.name && user.name.trim() !== ""
-      ? user.name
-      : user?.email ?? "";
+    user?.name && user.name.trim() !== "" ? user.name : user?.email ?? "";
 
   return (
     <header className="relative z-50 w-full bg-[#234C6A] text-white shadow-md">
@@ -186,24 +177,29 @@ export default function Header() {
           </Link>
 
           <nav ref={navRef} className="hidden lg:flex items-center gap-2">
+            {/* dropdown ทุกงานแสดง */}
             <TopDrop
               label="ทุกงานแสดง"
               openKey={openMenu}
               me="events"
               setOpen={setOpenMenu}
             />
-            <TopDrop
-              label="GiftShop"
-              openKey={openMenu}
-              me="giftshop"
-              setOpen={setOpenMenu}
-            />
-            <TopDrop
-              label="Promo"
-              openKey={openMenu}
-              me="promo"
-              setOpen={setOpenMenu}
-            />
+
+            {/* GiftShop เป็นปุ่มธรรมดา */}
+            <Link
+              to="/shop"
+              className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
+            >
+              GiftShop
+            </Link>
+
+            {/* Promo เป็นปุ่มธรรมดา */}
+            <Link
+              to="/promo/flash"
+              className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
+            >
+              Promo
+            </Link>
           </nav>
         </div>
 
@@ -243,9 +239,7 @@ export default function Header() {
                 <div className="flex items-center h-6 w-6 rounded-full bg-white/20 justify-center">
                   <User className="h-4 w-4" />
                 </div>
-                <span className="truncate max-w-[160px]">
-                  {displayName}
-                </span>
+                <span className="truncate max-w-[160px]">{displayName}</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
 
@@ -289,34 +283,47 @@ export default function Header() {
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+            {/* MOBILE MENU */}
       <div
         className={`lg:hidden border-t border-white/10 bg-[#234C6A] shadow-lg transition-[max-height,opacity] duration-300 ease-out overflow-hidden ${
           mobileOpen ? "max-h-[70vh] opacity-100" : "max-h-0 opacity-0"
         }`}
       >
         <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
-          {MENU_KEYS.map((key) => (
-            <div key={key}>
-              <p className="mb-1 text-sm font-semibold text-white/80">
-                {key === "events"
-                  ? "ทุกงานแสดง"
-                  : key === "giftshop"
-                  ? "GiftShop"
-                  : "Promo"}
-              </p>
-              {MENU_SECTIONS[key].map((item) => (
-                <Link
-                  key={`${key}-${item.to}`}
-                  to={item.to}
-                  className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {/* ทุกงานแสดง + ประเภท */}
+          <div>
+            <p className="mb-1 text-sm font-semibold text-white/80">
+              ทุกงานแสดง
+            </p>
+            {MENU_SECTIONS.events.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block pl-3 text-base text-white/90 hover:bg-white/10 rounded-lg py-2"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* GiftShop แสดงแบบหัวข้อเหมือนทุกงานแสดง แต่ยังคลิกได้ */}
+          <Link
+            to="/shop"
+            className="text-sm font-semibold text-white/80 block"
+            onClick={() => setMobileOpen(false)}
+          >
+            GiftShop
+          </Link>
+
+          {/* Promo แสดงแบบหัวข้อเหมือนทุกงานแสดง แต่ยังคลิกได้ */}
+          <Link
+            to="/promo"
+            className="text-sm font-semibold text-white/80 block"
+            onClick={() => setMobileOpen(false)}
+          >
+            Promo
+          </Link>
         </div>
       </div>
     </header>

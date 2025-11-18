@@ -30,9 +30,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
     Time: "19:00",
   },
@@ -47,9 +49,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "VIP", price: 3500 },
-      { name: "A", price: 2500 },
-      { name: "B", price: 1500 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
     Time: "19:00",
   },
@@ -64,9 +68,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "W", price: 200 },
-      { name: "E", price: 100 },
-      { name: "Away", price: 200 },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
     Time: "10:00 AM",
   },
@@ -81,10 +87,11 @@ export const EVENTS: Event[] = [
     description:
       "เงื่อนไขการซื้อตั๋ว / ช่องทางชำระเงิน / เวลาเปิดประตู / สิ่งที่ควรรู้ก่อนเข้าชม ฯลฯ",
     prices: [
-      { name: "W", price: 300 },
-      { name: "E", price: 200  },
-      { name: "N / S", price: 150  },
-      { name: "AWAY", price: 300  },
+      { name: "VIP", price: 6000 },
+      { name: "A", price: 3500 },
+      { name: "B", price: 2500 },
+      { name: "C", price: 1500 },
+      { name: "D", price: 750 },
     ],
     Time: "10:00 AM",
   },

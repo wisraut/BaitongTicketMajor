@@ -2,9 +2,11 @@ import Section from "../components/useall/Section";
 import Footer from "../components/useall/Footer";
 import Header from "../components/useall/Header";
 import type { EventItem } from "../components/home/EventCard";
-import { EVENTS as SPORTS_EVENTS } from "../data/eventboxing";
+import { EVENTS as SPORTS_EVENTS,
+        type Event as SportEvent, 
+      } from "../data/eventboxing";
 
-function toEventItem(event: any): EventItem {
+function toEventItem(event: SportEvent): EventItem {
   return {
     id: event.id,
     image: event.banner,
