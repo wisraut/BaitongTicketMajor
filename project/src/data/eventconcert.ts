@@ -49,7 +49,7 @@ export const EVENTS: Event[] = [
       { name: "A", price: 3500 },
       { name: "B", price: 2500 },
       { name: "C", price: 1500 },
-      { name: "D", price: 750 },
+      { name: "D", price: 1 },
     ],
   },
   {

@@ -1,44 +1,70 @@
-// src/components/Qrcode.tsx (ตามไฟล์เดิม แค่แก้เนื้อข้างใน)
-
 import React from "react";
 
-interface QRCodePopupProps {
+export interface QRCodePopupProps {
   amount: number;
   onClose: () => void;
-  onPaid: () => void;   // <<< เพิ่ม callback ตอนกดว่า "จ่ายแล้ว"
+  // เพิ่ม optional onPaid เพื่อให้ Payment.tsx ส่งมาได้
+  onPaid?: () => void;
 }
 
-const QRCodePopup: React.FC<QRCodePopupProps> = ({ amount, onClose, onPaid }) => {
+const QRCodePopup: React.FC<QRCodePopupProps> = ({
+  amount,
+  onClose,
+  onPaid,
+}) => {
   const promptpayId = "0837951132";
   const qrCodeUrl = `https://promptpay.io/${promptpayId}/${amount}`;
 
+  const handlePaidClick = () => {
+    // ถ้ามี onPaid ให้เรียกก่อน
+    if (onPaid) {
+      onPaid();
+    }
+    // แล้วค่อยปิด popup
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div className="bg-white rounded-2xl shadow-xl p-6 w-80 text-center relative">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="relative w-80 rounded-2xl bg-white p-6 text-center shadow-xl">
+        <h2 className="mb-2 text-lg font-semibold text-gray-800">
           สแกนเพื่อชำระเงิน
         </h2>
 
-        <img
-          src={qrCodeUrl}
-          alt="PromptPay QR Code"
-          className="w-64 h-64 mx-auto"
-        />
-
-        <p className="text-gray-600 mt-2">
-          จำนวน: {amount.toLocaleString()} บาท
+        <p className="text-sm text-gray-600 mb-3">
+          พร้อมเพย์: <span className="font-semibold">{promptpayId}</span>
         </p>
 
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-xl bg-gray-100">
+          <img
+            src={qrCodeUrl}
+            alt="PromptPay QR"
+            className="h-40 w-40 rounded-lg object-contain"
+          />
+        </div>
+
+        <p className="mt-3 text-sm text-gray-700">
+          จำนวน:{" "}
+          <span className="font-semibold">
+            {amount.toLocaleString()} บาท
+          </span>
+        </p>
+
+        <div className="mt-4 flex justify-center gap-3">
+          {/* ปุ่มยืนยันว่าจ่ายแล้ว (เรียก onPaid ถ้ามี) */}
           <button
-            onClick={onPaid}
-            className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition text-sm"
+            type="button"
+            onClick={handlePaidClick}
+            className="rounded-lg bg-yellow-500 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-600 transition"
           >
-            ฉันชำระเงินแล้ว
+            ชำระเงินแล้ว
           </button>
+
+          {/* ปุ่มปิดเฉย ๆ */}
           <button
+            type="button"
             onClick={onClose}
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm"
+            className="rounded-lg bg-gray-300 px-4 py-2 text-sm font-semibold text-gray-800 hover:bg-gray-400 transition"
           >
             ปิด
           </button>

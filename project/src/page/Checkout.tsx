@@ -3,6 +3,7 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import QRCodePopup from "../payment/qrcode";
 
 type CartItem = {
   id: string;
@@ -14,15 +15,16 @@ type CartItem = {
   quantity: number;
 };
 
+type PaymentMethod = "mobile" | "card" | "onsite";
+
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<
-    "mobile" | "card" | "onsite"
-  >("mobile");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("mobile");
+  const [showQR, setShowQR] = useState(false);
 
   const navigate = useNavigate();
 
@@ -46,7 +48,6 @@ export default function CheckoutPage() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-
     if (items.length === 0) {
       alert("ยังไม่มีสินค้าในตะกร้า");
       return;
@@ -57,13 +58,13 @@ export default function CheckoutPage() {
       return;
     }
 
-    const paymentLabel =
-      paymentMethod === "mobile"
-        ? "โอนผ่าน Mobile Banking"
-        : paymentMethod === "card"
-        ? "บัตรเครดิต / เดบิต"
-        : "จ่ายปลายทางที่หน้างาน (สำหรับบัตรงานแสดงที่รองรับ)";
+    const paymentText: Record<PaymentMethod, string> = {
+      mobile: "โอนผ่าน Mobile Banking",
+      card: "บัตรเครดิต / เดบิต",
+      onsite: "จ่ายปลายทางที่หน้างาน",
+    };
 
+    // alert ก่อน ตามที่ต้องการ
     alert(
       [
         "ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket",
@@ -71,10 +72,17 @@ export default function CheckoutPage() {
         `ชื่อผู้ซื้อ: ${fullName}`,
         `อีเมล: ${email}`,
         `เบอร์โทรศัพท์: ${phone}`,
-        `วิธีชำระเงิน: ${paymentLabel}`,
+        `วิธีชำระเงิน: ${paymentText[paymentMethod]}`,
       ].join("\n")
     );
 
+    // หลังผู้ใช้กด OK ที่ alert แล้วถึงจะมาทำตรงนี้
+    setShowQR(true);
+  };
+
+  const handleCloseQR = () => {
+    setShowQR(false);
+    // ชำระเงินเสร็จแล้วค่อยล้างตะกร้าและกลับหน้าแรก
     localStorage.removeItem("cartItems");
     navigate("/");
   };
@@ -158,9 +166,10 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="pay"
-                      className="h-4 w-4"
+                      value="mobile"
                       checked={paymentMethod === "mobile"}
                       onChange={() => setPaymentMethod("mobile")}
+                      className="h-4 w-4"
                     />
                     โอนผ่าน Mobile Banking
                   </label>
@@ -168,9 +177,10 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="pay"
-                      className="h-4 w-4"
+                      value="card"
                       checked={paymentMethod === "card"}
                       onChange={() => setPaymentMethod("card")}
+                      className="h-4 w-4"
                     />
                     บัตรเครดิต / เดบิต
                   </label>
@@ -178,9 +188,10 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="pay"
-                      className="h-4 w-4"
+                      value="onsite"
                       checked={paymentMethod === "onsite"}
                       onChange={() => setPaymentMethod("onsite")}
+                      className="h-4 w-4"
                     />
                     จ่ายปลายทางที่หน้างาน (สำหรับบัตรงานแสดงที่รองรับ)
                   </label>
@@ -242,6 +253,12 @@ export default function CheckoutPage() {
           </div>
         )}
       </main>
+
+      {/* popup QR หลังจากกด OK ที่ alert แล้ว */}
+      {showQR && (
+        <QRCodePopup amount={subtotal} onClose={handleCloseQR} />
+      )}
+
       <Footer />
     </div>
   );
