@@ -12,6 +12,7 @@ import CheckoutPage from "./page/Checkout";
 import ShopMenuPage from "./page/SportMenu";
 import AdminPage from "./page/Admin";
 import RequireAdmin from "./route/RequireAdmin";
+import HistoryPage from "./page/History";
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
       <Route path="/payment" element={<PaymentPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/shop" element={<ShopMenuPage />} />
+      <Route path="/history" element={<HistoryPage />} />
       <Route
         path="/admin"
         element={

@@ -12,7 +12,31 @@ type CartItem = {
   option?: string;
   unitPrice: number;
   quantity: number;
+  eventdate?: string;
+  eventlocation?: string;
+  eventtime?: string;
 };
+
+type OrderHistoryItem = {
+  id: string;
+  email: string;
+  type: "event" | "product" | "mixed";
+  items: CartItem[];
+  totalAmount: number;
+  createdAt: string;
+  buyerName?: string;
+  contactEmail?: string;
+  phone?: string;
+  paymentMethod?: string;
+};
+
+type LoggedInUser = {
+  name?: string;
+  email?: string;
+  uid?: string;
+};
+
+const HISTORY_KEY = "orderHistory";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -22,6 +46,7 @@ export default function PaymentPage() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
 
+  // โหลดตะกร้า
   useEffect(() => {
     const raw = localStorage.getItem("cartItems");
     if (!raw) return;
@@ -49,10 +74,62 @@ export default function PaymentPage() {
       return;
     }
 
+    // อ่านข้อมูล user ที่ล็อกอิน (ถ้ามี)
+    let loggedEmail = "";
+    try {
+      const rawUser = localStorage.getItem("loggedInUser");
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser) as LoggedInUser;
+        if (parsed.email) loggedEmail = parsed.email.toLowerCase();
+      }
+    } catch {
+      loggedEmail = "";
+    }
+
+    // หา type ของออเดอร์ (event / product / mixed)
+    const types = new Set(items.map((i) => i.type));
+    let orderType: OrderHistoryItem["type"];
+    if (types.size === 1) {
+      orderType = types.has("event") ? "event" : "product";
+    } else {
+      orderType = "mixed";
+    }
+
+    const now = new Date();
+
+    const newOrder: OrderHistoryItem = {
+      id: `ORD-${now.getTime()}`, // ไอดีออเดอร์ง่ายๆ จาก timestamp
+      email: (loggedEmail || email).toLowerCase(),
+      type: orderType,
+      items,
+      totalAmount: total,
+      createdAt: now.toISOString(),
+      buyerName: name,
+      contactEmail: email,
+      phone,
+      paymentMethod: "QR Payment",
+    };
+
+    // ดึง history เดิมจาก localStorage
+    let history: OrderHistoryItem[] = [];
+    const rawHistory = localStorage.getItem(HISTORY_KEY);
+    if (rawHistory) {
+      try {
+        const parsed = JSON.parse(rawHistory);
+        if (Array.isArray(parsed)) history = parsed;
+      } catch {
+        history = [];
+      }
+    }
+
+    history.push(newOrder);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
     alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
 
+    // เคลียร์ตะกร้า แล้วไปหน้า history
     localStorage.removeItem("cartItems");
-    navigate("/");
+    navigate("/history");
   };
 
   return (
@@ -68,6 +145,7 @@ export default function PaymentPage() {
           </p>
         ) : (
           <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
+            {/* ฟอร์มข้อมูลผู้ซื้อ */}
             <form
               onSubmit={handleSubmit}
               className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
@@ -131,10 +209,12 @@ export default function PaymentPage() {
               </button>
             </form>
 
+            {/* สรุปรายการ + QR */}
             <aside className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
               <h2 className="text-sm font-semibold text-slate-900">
                 สรุปรายการ
               </h2>
+
               <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                 {items.map((item) => (
                   <div
@@ -156,10 +236,20 @@ export default function PaymentPage() {
                   </div>
                 ))}
               </div>
+
               <hr className="my-2" />
+
               <div className="flex justify-between text-sm font-semibold text-slate-900">
                 <span>ยอดรวมทั้งหมด</span>
                 <span>{total.toLocaleString()} บาท</span>
+              </div>
+
+              <div className="mt-6 flex justify-center">
+                <img
+                  src="/qrcode.jpg"
+                  alt="QR Code สำหรับชำระเงิน"
+                  className="w-64 h-64 object-contain"
+                />
               </div>
             </aside>
           </div>

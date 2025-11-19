@@ -10,8 +10,8 @@ import {
   LogOut,
 } from "lucide-react";
 
-// เมนูหลัก (เฉพาะอีเวนต์กับโปรโม)
-const MENU_KEYS = ["events", "promo"] as const;
+// เมนูหลัก (เหลือแค่อีเวนต์)
+const MENU_KEYS = ["events"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
 
@@ -24,10 +24,6 @@ const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
     { label: "Concerts", to: "/concerts" },
     { label: "Sports", to: "/sports" },
     { label: "Performing Arts", to: "/performance" },
-  ],
-  promo: [
-    { label: "Flash Sale", to: "/promo/flash" },
-    { label: "Season Pass", to: "/promo/season" },
   ],
 };
 
@@ -158,35 +154,43 @@ export default function Header() {
               me="events"
               setOpen={setOpenMenu}
             />
-            {/* GiftShop เป็นปุ่มเดี่ยว ไม่ใช่ดรอปดาวน์ */}
+            {/* GiftShop เป็นปุ่มเดี่ยว */}
             <Link
               to={SHOP_PATH}
               className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
             >
               GiftShop
             </Link>
-            <DesktopDrop
-              label="Promo"
-              openKey={openMenu}
-              me="promo"
-              setOpen={setOpenMenu}
-            />
           </nav>
         </div>
 
         {/* right */}
         <div className="flex items-center gap-3">
-          <form className="relative hidden md:block">
+          <form className="relative hidden md:block w-72 lg:w-80">
             <input
               type="search"
-              placeholder="ค้นหา…"
-              className="w-72 rounded-full bg-white/10 pl-4 pr-10 py-2 text-sm placeholder-white/70 text-white outline-none ring-1 ring-white/20 focus:ring-2 focus:ring-white/40"
+              placeholder="ค้นหา..."
+              className="
+                w-full rounded-full bg-white
+                pl-10 pr-4 py-2
+                text-sm text-slate-800
+                placeholder-slate-400
+                shadow-sm
+                ring-1 ring-slate-200
+                focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-1 focus:ring-offset-[#234C6A]
+                transition
+              "
             />
             <button
               type="submit"
-              className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full p-1.5 hover:bg-white/10"
+              className="
+                absolute left-2 top-1/2 -translate-y-1/2
+                rounded-full p-1
+                text-slate-400 hover:text-slate-700
+                pointer-events-none
+              "
             >
-              <Search className="h-5 w-5" />
+              <Search className="h-4 w-4" />
             </button>
           </form>
 
@@ -211,13 +215,24 @@ export default function Header() {
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-lg bg-white py-2 text-slate-700 shadow-lg">
+                <div className="absolute right-0 mt-2 w-48 rounded-lg bg-white py-2 text-slate-700 shadow-lg">
                   <p className="px-3 pb-2 text-xs text-slate-400">
                     เข้าสู่ระบบแล้ว
                   </p>
+                  {/* ไปหน้า History */}
+                  <button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      navigate("/history");
+                    }}
+                    className="block w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
+                  >
+                    ประวัติการสั่งซื้อ
+                  </button>
+
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100"
+                    className="mt-1 flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100"
                   >
                     <LogOut className="h-4 w-4" /> Logout
                   </button>
@@ -274,31 +289,16 @@ export default function Header() {
             ))}
           </div>
 
-          {/* GiftShop ปุ่มเดียว */}
+          {/* GiftShop */}
           <div>
             <p className="mb-1 text-sm font-semibold text-white/80">GiftShop</p>
             <Link
               to={SHOP_PATH}
-              className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
+              className="block rounded-lg px-3 py-2 text-base hover:bg:white/10 hover:bg-white/10"
               onClick={() => setMobileOpen(false)}
             >
               ดูสินค้าทั้งหมด
             </Link>
-          </div>
-
-          {/* Promo */}
-          <div>
-            <p className="mb-1 text-sm font-semibold text-white/80">Promo</p>
-            {MENU_SECTIONS.promo.map((item) => (
-              <Link
-                key={`promo-${item.to}`}
-                to={item.to}
-                className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
-                onClick={() => setMobileOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
           </div>
         </div>
       </div>
