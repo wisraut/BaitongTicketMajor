@@ -332,25 +332,27 @@ export default function Header() {
               <div className="space-y-2 text-sm text-white/90">
                 <p className="text-xs text-white/70">{displayName}</p>
 
-                {/* ลิงก์ไปหน้า History บน mobile */}
-                <Link
-                  to="/history"
-                  onClick={() => setMobileOpen(false)}
-                  className="inline-flex rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
-                >
-                  ประวัติการสั่งซื้อ
-                </Link>
+                {/* ปุ่มสำหรับ mobile: History + Logout แยกกันด้วย gap */}
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/history"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex flex-1 min-w-[120px] justify-center rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
+                  >
+                    ประวัติการสั่งซื้อ
+                  </Link>
 
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </button>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <Link
