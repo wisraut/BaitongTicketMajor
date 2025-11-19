@@ -1,9 +1,8 @@
 // src/page/EventDetail.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { collection, getDocs, limit, query, where } from "firebase/firestore";
 import { db } from "../firebase";
-import type { Event } from "../data/eventconcert";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
@@ -12,7 +11,26 @@ import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-const ALL_EVENTS: Event[] = [
+// ---- type รวมของ event ทุกแบบ (ไฟล์ data + Firestore) ----
+type PriceTier = {
+  name: string;
+  price: number;
+};
+
+type AnyEvent = {
+  id: string;
+  title: string;
+  subtitle?: string;
+  banner: string;
+  dateRange?: string;
+  Time?: string;
+  stageImage?: string;
+  venue?: string;
+  description?: string;
+  prices?: PriceTier[];
+};
+
+const STATIC_EVENTS: AnyEvent[] = [
   ...CONCERT_EVENTS,
   ...BOXING_EVENTS,
   ...PERFORMANCE_EVENTS,
@@ -29,7 +47,7 @@ type CartItem = {
   type: "event" | "product";
   title: string;
   image: string;
-  option?: string;
+  option?: string; // ชื่อโซน / size
   unitPrice: number;
   quantity: number;
 };
@@ -39,13 +57,11 @@ export default function EventDetail() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<LoggedInUser | null>(null);
+  const [event, setEvent] = useState<AnyEvent | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
-  // state สำหรับ event ที่จะเอามาแสดง + loading
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // โหลด user จาก localStorage
+  // ดึง user จาก localStorage
   useEffect(() => {
     const raw = localStorage.getItem("loggedInUser");
     if (raw) {
@@ -57,21 +73,20 @@ export default function EventDetail() {
     }
   }, []);
 
-  // หา event จาก data + Firestore
+  // โหลด event จาก static + Firestore
   useEffect(() => {
-    if (!id) return;
-
-    setLoading(true);
-
-    // 1) หาใน data เดิมก่อน
-    const fromBase = ALL_EVENTS.find((e) => e.id === id);
-    if (fromBase) {
-      setEvent(fromBase);
+    if (!id) {
       setLoading(false);
       return;
     }
 
-    // 2) ถ้าไม่เจอ ไปหาใน Firestore
+    const fromStatic = STATIC_EVENTS.find((e) => e.id === id);
+    if (fromStatic) {
+      setEvent(fromStatic);
+      setLoading(false);
+      return;
+    }
+
     const fetchFromFirestore = async () => {
       try {
         const q = query(
@@ -81,18 +96,21 @@ export default function EventDetail() {
         );
         const snap = await getDocs(q);
 
-        if (!snap.empty) {
-          const data = snap.docs[0].data() as any;
+        if (snap.empty) {
+          setEvent(null);
+        } else {
+          const doc = snap.docs[0];
+          const data = doc.data() as any;
 
-          const fromDb: Event = {
+          const fromDb: AnyEvent = {
             id: data.id ?? id,
             title: data.title ?? "",
             subtitle: data.subtitle ?? "",
             banner: data.banner ?? "",
             dateRange: data.dateRange ?? "",
             Time: data.Time ?? "",
-            stageImage: data.stageImage ?? "",
             venue: data.venue ?? "",
+            stageImage: data.stageImage ?? "",
             description: data.description ?? "",
             prices: Array.isArray(data.prices)
               ? data.prices.map((p: any) => ({
@@ -103,9 +121,10 @@ export default function EventDetail() {
           };
 
           setEvent(fromDb);
-        } else {
-          setEvent(null);
         }
+      } catch (error) {
+        console.log("[EventDetail] load error", error);
+        setEvent(null);
       } finally {
         setLoading(false);
       }
@@ -114,81 +133,81 @@ export default function EventDetail() {
     fetchFromFirestore();
   }, [id]);
 
-  const handleGoPayment = () => {
-    if (!event) return;
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-sm text-slate-600">กำลังโหลดข้อมูลงานแสดง…</p>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-sm text-slate-600">ไม่พบงานแสดง</p>
+      </div>
+    );
+  }
+
+  const prices = event.prices ?? [];
+  const defaultTier = prices.length > 0 ? prices[0] : undefined;
+
+  // อ่าน cart ปัจจุบันจาก localStorage
+  function readCart(): CartItem[] {
+    const raw = localStorage.getItem("cartItems");
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+      return [];
+    } catch {
+      return [];
     }
-    localStorage.setItem("currentEventId", event.id);
-    navigate("/payment");
-  };
+  }
 
-  const handleAddToCart = () => {
-    if (!event) return;
-    if (!user) {
-      setShowLoginPrompt(true);
-      return;
-    }
+  function writeCart(items: CartItem[]) {
+    localStorage.setItem("cartItems", JSON.stringify(items));
+  }
 
-    const prices = (event as any).prices as
-      | { name: string; price: number }[]
-      | undefined;
-
-    const defaultTier = prices && prices.length > 0 ? prices[0] : undefined;
-
-    const cartItem: CartItem = {
+  function buildDefaultCartItem(): CartItem {
+    return {
       id: defaultTier
         ? `${event.id}:${defaultTier.name}`
         : `${event.id}:default`,
       type: "event",
       title: event.title,
       image: event.banner,
-      option: defaultTier ? defaultTier.name : undefined,
-      unitPrice: defaultTier ? defaultTier.price : 0,
+      option: defaultTier?.name,
+      unitPrice: defaultTier?.price ?? 0,
       quantity: 1,
     };
+  }
 
-    const raw = localStorage.getItem("cartItems");
-    let items: CartItem[] = [];
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          items = parsed;
-        }
-      } catch {
-        items = [];
-      }
+  const requireLogin = (cb: () => void) => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
     }
-
-    items.push(cartItem);
-    localStorage.setItem("cartItems", JSON.stringify(items));
-
-    navigate("/cart");
+    cb();
   };
 
-  // ระหว่างโหลด
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <main className="py-10 text-center text-slate-600">กำลังโหลด...</main>
-        <Footer />
-      </div>
-    );
-  }
+  const handleAddToCart = () => {
+    requireLogin(() => {
+      const items = readCart();
+      items.push(buildDefaultCartItem());
+      writeCart(items);
+      navigate("/cart");
+    });
+  };
 
-  // หาไม่เจอทั้ง data + Firestore
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <main className="py-10 text-center text-slate-600">ไม่พบงานแสดง</main>
-        <Footer />
-      </div>
-    );
-  }
+  const handleGoPayment = () => {
+    requireLogin(() => {
+      const items = readCart();
+      items.push(buildDefaultCartItem());
+      writeCart(items);
+      navigate("/payment");
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -206,23 +225,35 @@ export default function EventDetail() {
                 />
               )}
             </div>
+
             <div className="flex-1 space-y-3 text-center md:text-left text-white">
               <h1 className="text-2xl font-bold">{event.title}</h1>
+
               {event.subtitle && (
                 <p className="text-sm text-slate-200">{event.subtitle}</p>
               )}
+
               {event.dateRange && (
                 <p className="text-sm text-slate-200">
                   วันจัดงาน {event.dateRange}
                 </p>
               )}
+
               {event.venue && (
                 <p className="text-sm text-slate-200">
                   สถานที่จัดงาน {event.venue}
                 </p>
               )}
+
               {event.Time && (
                 <p className="text-sm text-slate-200">เวลา {event.Time}</p>
+              )}
+
+              {defaultTier && (
+                <p className="mt-1 text-sm text-slate-200">
+                  ราคาบัตรเริ่มต้น {defaultTier.name}{" "}
+                  {defaultTier.price.toLocaleString()} บาท
+                </p>
               )}
 
               <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">

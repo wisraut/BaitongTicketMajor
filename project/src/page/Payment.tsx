@@ -1,210 +1,172 @@
+// src/page/Payment.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
-import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
-import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
-import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
-const ALL_EVENTS = [...CONCERT_EVENTS, ...BOXING_EVENTS, ...PERFORMANCE_EVENTS];
-
-type PriceTier = (typeof ALL_EVENTS)[number]["prices"][number];
+type CartItem = {
+  id: string;
+  type: "event" | "product";
+  title: string;
+  image: string;
+  option?: string;
+  unitPrice: number;
+  quantity: number;
+};
 
 export default function PaymentPage() {
-  const [event, setEvent] = useState<(typeof ALL_EVENTS)[number] | null>(null);
-  const [selectedTier, setSelectedTier] = useState<PriceTier | null>(null);
-  const [qty, setQty] = useState(1);
   const navigate = useNavigate();
+  const [items, setItems] = useState<CartItem[]>([]);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
 
   useEffect(() => {
-    const id = localStorage.getItem("currentEventId");
-    if (!id) {
-      navigate("/events");
-      return;
+    const raw = localStorage.getItem("cartItems");
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        setItems(parsed);
+      }
+    } catch {
+      setItems([]);
     }
-    const found = ALL_EVENTS.find((e) => e.id === id);
-    if (!found) {
-      navigate("/events");
-      return;
-    }
-    setEvent(found);
-  }, [navigate]);
+  }, []);
 
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <p className="text-slate-500 text-sm">กำลังโหลดข้อมูลงานแสดง</p>
-      </div>
-    );
-  }
+  const total = items.reduce((sum, it) => sum + it.unitPrice * it.quantity, 0);
 
-  const handleConfirmPayment = () => {
-    if (!selectedTier) {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (items.length === 0) {
+      alert("ยังไม่มีรายการในตะกร้า");
       return;
     }
-    const payload = {
-      eventId: event.id,
-      eventTitle: event.title,
-      dateRange: (event as any).dateRange,
-      time: (event as any).Time,
-      venue: (event as any).venue,
-      banner: event.banner,
-      tierName: selectedTier.name,
-      price: selectedTier.price,
-      quantity: qty,
-      total: selectedTier.price * qty,
-    };
-    localStorage.setItem("lastOrder", JSON.stringify(payload));
-    localStorage.removeItem("currentEventId");
+    if (!name || !email || !phone) {
+      alert("กรุณากรอกชื่อ อีเมล และเบอร์โทรให้ครบ");
+      return;
+    }
+
+    alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
+
+    localStorage.removeItem("cartItems");
     navigate("/");
   };
 
-  const total = selectedTier ? selectedTier.price * qty : 0;
-
   return (
-    <div className="min-h-screen bg-slate-100">
-      <Header/>
-      <div className="max-w-4xl mx-auto px-4 py-8 grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-2 space-y-4">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex gap-4">
-            {event.banner && (
-              <img
-                src={event.banner}
-                alt={event.title}
-                className="hidden sm:block h-24 w-24 rounded-lg object-cover"
-              />
-            )}
-            <div className="flex-1 text-sm space-y-1">
-              <p className="text-xs uppercase text-slate-400">{event.id}</p>
-              <p className="font-semibold text-slate-900">{event.title}</p>
-              {(event as any).dateRange && (
-                <p className="text-slate-600">
-                  วันจัดงาน {(event as any).dateRange}
-                </p>
-              )}
-              {(event as any).Time && (
-                <p className="text-slate-600">เวลา {(event as any).Time}</p>
-              )}
-              {(event as any).venue && (
-                <p className="text-slate-600">
-                  สถานที่จัดงาน {(event as any).venue}
-                </p>
-              )}
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <Header />
 
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 space-y-4 text-sm">
-            <h2 className="font-semibold text-slate-900">ข้อมูลผู้ซื้อ</h2>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div>
-                <label className="block text-slate-600 mb-1">
-                  ชื่อและนามสกุล
-                </label>
-                <input className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
-              </div>
-              <div>
-                <label className="block text-slate-600 mb-1">อีเมล</label>
-                <input
-                  type="email"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-600 mb-1">
-                  เบอร์โทรศัพท์
-                </label>
-                <input
-                  type="tel"
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                />
-              </div>
-            </div>
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">ชำระเงิน</h1>
 
-            <div className="pt-2 space-y-3">
-              <h2 className="font-semibold text-slate-900">
-                เลือกที่นั่งและจำนวนบัตร
+        {items.length === 0 ? (
+          <p className="text-sm text-slate-600">
+            ยังไม่มีรายการในตะกร้า กรุณาเลือกงานแสดงหรือสินค้าเพิ่มลงตะกร้าก่อน
+          </p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
+            >
+              <h2 className="text-sm font-semibold text-slate-900 mb-2">
+                ข้อมูลผู้ซื้อ
               </h2>
-              <div className="space-y-2">
-                <label className="block text-slate-600 text-sm">
-                  โซนที่นั่ง
-                </label>
-                <select
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  value={selectedTier?.name ?? ""}
-                  onChange={(e) => {
-                    const tier =
-                      event.prices.find(
-                        (p: PriceTier) => p.name === e.target.value
-                      ) || null;
-                    setSelectedTier(tier);
-                  }}
-                >
-                  <option value="">เลือกโซนที่นั่ง</option>
-                  {event.prices.map((tier: PriceTier) => (
-                    <option key={tier.name} value={tier.name}>
-                      {tier.name} ราคา {tier.price.toLocaleString()} บาท
-                    </option>
-                  ))}
-                </select>
-              </div>
 
-              <div className="space-y-1">
-                <label className="block text-slate-600 text-sm">
-                  จำนวนบัตร
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  ชื่อ-นามสกุล
                 </label>
                 <input
-                  type="number"
-                  min={1}
-                  value={qty}
-                  onChange={(e) =>
-                    setQty(Math.max(1, Number(e.target.value) || 1))
-                  }
-                  className="w-24 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
                 />
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="md:col-span-1">
-          <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 space-y-3 text-sm">
-            <h2 className="font-semibold text-slate-900">สรุปคำสั่งซื้อ</h2>
-            <div className="flex justify-between">
-              <span>โซนที่นั่ง</span>
-              <span>{selectedTier ? selectedTier.name : "-"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>ราคาต่อใบ</span>
-              <span>
-                {selectedTier ? selectedTier.price.toLocaleString() : 0} บาท
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>จำนวน</span>
-              <span>{qty} ใบ</span>
-            </div>
-            <div className="border-t border-slate-200 pt-3 flex justify-between font-semibold">
-              <span>ยอดชำระรวม</span>
-              <span>{total.toLocaleString()} บาท</span>
-            </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="block text-xs font-medium mb-1">
+                    อีเมล
+                  </label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">
+                    เบอร์โทรศัพท์
+                  </label>
+                  <input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
 
-            <button
-              onClick={handleConfirmPayment}
-              disabled={!selectedTier}
-              className="mt-4 w-full rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
-            >
-              ยืนยันการชำระเงิน
-            </button>
-            <button
-              onClick={() => navigate(-1)}
-              className="mt-2 w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
-            >
-              กลับไปหน้าก่อนหน้า
-            </button>
+              <div>
+                <label className="block text-xs font-medium mb-1">
+                  หมายเหตุ (ไม่บังคับ)
+                </label>
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="mt-2 inline-flex items-center justify-center rounded-full bg-[#234C6A] px-6 py-2.5 text-sm font-semibold text-white"
+              >
+                ยืนยันการชำระเงิน
+              </button>
+            </form>
+
+            <aside className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
+              <h2 className="text-sm font-semibold text-slate-900">
+                สรุปรายการ
+              </h2>
+              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between text-xs text-slate-700"
+                  >
+                    <div>
+                      <p className="font-semibold">{item.title}</p>
+                      {item.option && (
+                        <p className="text-slate-500">
+                          ตัวเลือก: {item.option}
+                        </p>
+                      )}
+                      <p className="text-slate-500">x{item.quantity} ชิ้น</p>
+                    </div>
+                    <p className="font-semibold">
+                      {(item.unitPrice * item.quantity).toLocaleString()} บาท
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <hr className="my-2" />
+              <div className="flex justify-between text-sm font-semibold text-slate-900">
+                <span>ยอดรวมทั้งหมด</span>
+                <span>{total.toLocaleString()} บาท</span>
+              </div>
+            </aside>
           </div>
-        </div>
-      </div>
-      <Footer/>
+        )}
+      </main>
+
+      <Footer />
     </div>
   );
 }
