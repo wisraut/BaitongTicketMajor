@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useUserAuth } from "../../context/UserAuthContext";
+import { useUserAuth } from "./UserAuthContext";
 import { Text } from "@radix-ui/themes";
 
 type LoginFormProps = {

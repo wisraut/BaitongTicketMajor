@@ -1,123 +1,200 @@
-// src/page/History.tsx
-
-import { useEffect, useState } from "react";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import { useEffect, useState } from "react";
 
-type HistoryItem = {
+// ต้องให้โครง CartItem ตรงกับที่ใช้ใน Payment / Cart / Shop
+type CartItem = {
   id: string;
-  userEmail: string | null;
-  createdAt: string;
-  eventId: string;
-  eventTitle: string;
-  dateRange?: string;
-  time?: string;
-  venue?: string;
-  banner?: string;
-  tierName: string;
-  price: number;
+  type: "event" | "product";
+  title: string;
+  image: string;
+  option?: string;
+  unitPrice: number;
   quantity: number;
-  total: number;
+  eventdate?: string;
+  eventlocation?: string;
+  eventtime?: string;
 };
 
-export default function HistoryPage() {
-  const [items, setItems] = useState<HistoryItem[]>([]);
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+type OrderHistoryItem = {
+  id: string;
+  email: string;
+  type: "event" | "product" | "mixed";
+  items: CartItem[];
+  totalAmount: number;
+  createdAt: string;
+  buyerName?: string;
+  contactEmail?: string;
+  phone?: string;
+  paymentMethod?: string;
+};
 
+type LoggedInUser = {
+  name?: string;
+  email?: string;
+  uid?: string;
+};
+
+const HISTORY_KEY = "orderHistory";
+
+export default function HistoryPage() {
+  const [user, setUser] = useState<LoggedInUser | null>(null);
+  const [orders, setOrders] = useState<OrderHistoryItem[]>([]);
+
+  // โหลดข้อมูลผู้ใช้ที่ล็อกอิน
   useEffect(() => {
     const rawUser = localStorage.getItem("loggedInUser");
-    if (rawUser) {
-      try {
-        const parsed = JSON.parse(rawUser) as { email?: string };
-        setUserEmail(parsed.email ?? null);
-      } catch {
-        setUserEmail(null);
-      }
-    }
-
-    const rawHistory = localStorage.getItem("orderHistory");
-    if (rawHistory) {
-      try {
-        const parsed = JSON.parse(rawHistory);
-        if (Array.isArray(parsed)) {
-          setItems(parsed);
-        }
-      } catch {
-        setItems([]);
-      }
+    if (!rawUser) return;
+    try {
+      const parsed = JSON.parse(rawUser) as LoggedInUser;
+      setUser(parsed);
+    } catch {
+      setUser(null);
     }
   }, []);
 
-  if (!userEmail) {
-    return (
-      <div className="min-h-screen bg-slate-50">
-        <Header />
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <p className="text-sm text-slate-600">
-            กรุณาเข้าสู่ระบบก่อนเพื่อดูประวัติการสั่งซื้อ
-          </p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  // โหลดประวัติคำสั่งซื้อ
+  useEffect(() => {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as OrderHistoryItem[];
+      if (Array.isArray(parsed)) {
+        setOrders(parsed);
+      }
+    } catch {
+      setOrders([]);
+    }
+  }, []);
 
-  const myOrders = items.filter((o) => o.userEmail === userEmail);
+  const userEmail = (user?.email ?? "").toLowerCase();
+  const myOrders = orders.filter(
+    (o) => o.email.toLowerCase() === userEmail && userEmail !== ""
+  );
+
+  // เรียง order ใหม่ล่าสุดอยู่บน
+  const sortedOrders = [...myOrders].sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100">
       <Header />
-      <main className="max-w-4xl mx-auto px-4 py-8 space-y-4">
-        <h1 className="text-xl font-semibold text-slate-900">
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <h1 className="mb-4 text-xl font-bold text-slate-900">
           ประวัติการสั่งซื้อ
         </h1>
 
-        {myOrders.length === 0 ? (
+        {!userEmail && (
           <p className="text-sm text-slate-600">
-            ยังไม่มีประวัติการสั่งซื้อสำหรับบัญชี {userEmail}
+            กรุณาเข้าสู่ระบบเพื่อดูประวัติการสั่งซื้อ
           </p>
-        ) : (
-          <div className="space-y-3">
-            {myOrders
-              .slice()
-              .reverse()
-              .map((order) => (
-                <div
-                  key={order.id}
-                  className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 flex gap-3"
-                >
-                  {order.banner && (
-                    <img
-                      src={order.banner}
-                      alt={order.eventTitle}
-                      className="hidden sm:block h-20 w-20 rounded-md object-cover"
-                    />
-                  )}
-                  <div className="flex-1 text-sm">
+        )}
+
+        {userEmail && sortedOrders.length === 0 && (
+          <p className="text-sm text-slate-600">
+            ยังไม่มีประวัติการสั่งซื้อสำหรับอีเมล {userEmail}
+          </p>
+        )}
+
+        {userEmail && sortedOrders.length > 0 && (
+          <div className="space-y-4">
+            {sortedOrders.map((order) => (
+              <div
+                key={order.id}
+                className="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
                     <p className="font-semibold text-slate-900">
-                      {order.eventTitle}
+                      คำสั่งซื้อ #{order.id}
                     </p>
-                    <p className="text-slate-600 text-xs">
-                      {order.dateRange} {order.time && `เวลา ${order.time}`}
+                    <p className="text-xs text-slate-500">
+                      วันที่สั่งซื้อ:{" "}
+                      {new Date(order.createdAt).toLocaleString("th-TH")}
                     </p>
-                    {order.venue && (
-                      <p className="text-slate-600 text-xs">
-                        สถานที่จัดงาน {order.venue}
+                    {order.buyerName && (
+                      <p className="text-xs text-slate-500">
+                        ผู้ซื้อ: {order.buyerName}
                       </p>
                     )}
-                    <p className="mt-1 text-slate-700 text-xs">
-                      โซน: {order.tierName} | จำนวน: {order.quantity} ใบ
-                    </p>
-                    <p className="text-slate-900 font-semibold text-sm">
-                      ยอดรวม {order.total.toLocaleString()} บาท
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      รหัสออเดอร์ {order.id} | สั่งเมื่อ{" "}
-                      {new Date(order.createdAt).toLocaleString()}
+                    {order.paymentMethod && (
+                      <p className="text-xs text-slate-500">
+                        วิธีชำระเงิน: {order.paymentMethod}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-slate-500">ยอดรวม</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {order.totalAmount.toLocaleString()} บาท
                     </p>
                   </div>
                 </div>
-              ))}
+
+                <div className="mt-3 border-t border-slate-200 pt-2 space-y-2">
+                  {order.items.map((item, idx) => (
+                    <div
+                      key={`${item.id}-${idx}`}
+                      className="flex gap-3 text-sm"
+                    >
+                      <div className="h-14 w-14 flex-shrink-0 rounded-md overflow-hidden bg-slate-100">
+                        {item.image && (
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-0.5">
+                        <p className="font-medium text-slate-900">
+                          {item.title}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          ประเภท:{" "}
+                          {item.type === "event" ? "งานแสดง" : "สินค้า"}
+                        </p>
+                        {item.option && (
+                          <p className="text-xs text-slate-500">
+                            ตัวเลือก: {item.option}
+                          </p>
+                        )}
+
+                        {item.type === "event" &&
+                          (item.eventdate ||
+                            item.eventlocation ||
+                            item.eventtime) && (
+                            <p className="text-xs text-slate-500">
+                              {item.eventdate && (
+                                <>
+                                  วันที่แสดง: {item.eventdate}{" "}
+                                </>
+                              )}
+                              {item.eventtime && (
+                                <>
+                                  เวลา: {item.eventtime}{" "}
+                                </>
+                              )}
+                              {item.eventlocation && (
+                                <>
+                                  สถานที่: {item.eventlocation}
+                                </>
+                              )}
+                            </p>
+                          )}
+
+                        <p className="text-xs text-slate-600">
+                          จำนวน {item.quantity} ×{" "}
+                          {item.unitPrice.toLocaleString()} บาท
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>

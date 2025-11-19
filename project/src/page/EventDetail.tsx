@@ -35,6 +35,8 @@ type CartItem = {
   option?: string;
   unitPrice: number;
   quantity: number;
+  eventdate?: string;
+  eventlocation?: string;
 };
 
 export default function EventDetail() {
@@ -107,6 +109,8 @@ export default function EventDetail() {
       option: tier.name,
       unitPrice: tier.price,
       quantity: ticketQty,
+      eventdate: event.dateRange ?? "",
+      eventlocation: event.venue ?? "",
     };
 
     const existingIndex = cart.findIndex(

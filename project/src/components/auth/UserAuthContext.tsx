@@ -10,7 +10,7 @@ import {
   type User,
   type UserCredential,
 } from "firebase/auth";
-import { auth } from "../firebase";
+import { auth } from "../auth/firebase";
 
 type UserAuthContextType = {
   user: User | null;
