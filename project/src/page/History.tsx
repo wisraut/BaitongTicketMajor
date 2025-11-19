@@ -2,7 +2,6 @@ import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 import { useEffect, useState } from "react";
 
-// ต้องให้โครง CartItem ตรงกับที่ใช้ใน Payment / Cart / Shop
 type CartItem = {
   id: string;
   type: "event" | "product";
@@ -72,16 +71,16 @@ export default function HistoryPage() {
     (o) => o.email.toLowerCase() === userEmail && userEmail !== ""
   );
 
-  // เรียง order ใหม่ล่าสุดอยู่บน
   const sortedOrders = [...myOrders].sort(
     (a, b) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      {/* full width ของ viewport เหลือ padding รอบ ๆ */}
+      <main className="flex-1 w-full px-3 sm:px-6 lg:px-10 py-8">
         <h1 className="mb-4 text-xl font-bold text-slate-900">
           ประวัติการสั่งซื้อ
         </h1>
@@ -99,14 +98,14 @@ export default function HistoryPage() {
         )}
 
         {userEmail && sortedOrders.length > 0 && (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {sortedOrders.map((order) => (
               <div
                 key={order.id}
-                className="rounded-lg bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200 text-sm"
+                className="w-full rounded-xl bg-white px-4 sm:px-6 py-3 sm:py-4 shadow-sm ring-1 ring-slate-200 text-sm"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-0.5">
                     <p className="font-semibold text-slate-900">
                       คำสั่งซื้อ #{order.id}
                     </p>
@@ -126,7 +125,7 @@ export default function HistoryPage() {
                     )}
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500">ยอดรวม</p>
+                    <p className="text-[11px] text-slate-500">ยอดรวม</p>
                     <p className="text-sm font-semibold text-slate-900">
                       {order.totalAmount.toLocaleString()} บาท
                     </p>
@@ -137,9 +136,9 @@ export default function HistoryPage() {
                   {order.items.map((item, idx) => (
                     <div
                       key={`${item.id}-${idx}`}
-                      className="flex gap-3 text-sm"
+                      className="flex gap-3 rounded-lg bg-slate-50/70 px-2 py-2 sm:px-3"
                     >
-                      <div className="h-14 w-14 flex-shrink-0 rounded-md overflow-hidden bg-slate-100">
+                      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md bg-slate-100">
                         {item.image && (
                           <img
                             src={item.image}

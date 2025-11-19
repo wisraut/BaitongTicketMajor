@@ -55,9 +55,9 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-100 flex flex-col">
       <Header />
-      <main className="mx-auto max-w-5xl px-4 py-8">
+      <main className="mx-auto max-w-5xl px-4 py-8 flex-1">
         <h1 className="mb-4 text-xl font-bold text-slate-900">
           ตะกร้าของคุณ
         </h1>
