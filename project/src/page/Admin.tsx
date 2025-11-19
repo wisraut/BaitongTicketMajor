@@ -256,10 +256,10 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* คำโปรยสั้น */}
+                {/* Description */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
-                    คำโปรยสั้น
+                    Description
                   </label>
                   <input
                     name="subtitle"
