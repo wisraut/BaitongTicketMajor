@@ -10,10 +10,13 @@ import {
   LogOut,
 } from "lucide-react";
 
-// เมนูหลัก
-const MENU_KEYS = ["events", "giftshop", "promo"] as const;
+// เมนูหลัก (เฉพาะอีเวนต์กับโปรโม)
+const MENU_KEYS = ["events", "promo"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
+
+// path ของหน้า ShopMenu
+const SHOP_PATH = "/shop";
 
 // ทำให้แต่ละรายการมี path ของมันเอง
 const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
@@ -22,17 +25,12 @@ const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
     { label: "Sports", to: "/sports" },
     { label: "Performing Arts", to: "/performance" },
   ],
-  giftshop: [
-    { label: "T-Shirts", to: "/shop/tshirts" },
-    { label: "Merch Bundles", to: "/shop/bundles" },
-  ],
   promo: [
     { label: "Flash Sale", to: "/promo/flash" },
     { label: "Season Pass", to: "/promo/season" },
   ],
 };
 
-// =============== dropdown desktop ===============
 const DesktopDrop: React.FC<{
   label: string;
   openKey: MenuKey;
@@ -86,7 +84,6 @@ const DesktopDrop: React.FC<{
   );
 };
 
-// =============== HEADER หลัก ===============
 export default function Header() {
   const [openMenu, setOpenMenu] = useState<MenuKey>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -161,12 +158,13 @@ export default function Header() {
               me="events"
               setOpen={setOpenMenu}
             />
-            <DesktopDrop
-              label="GiftShop"
-              openKey={openMenu}
-              me="giftshop"
-              setOpen={setOpenMenu}
-            />
+            {/* GiftShop เป็นปุ่มเดี่ยว ไม่ใช่ดรอปดาวน์ */}
+            <Link
+              to={SHOP_PATH}
+              className="rounded-md px-3 py-1.5 text-sm text-white/90 hover:bg-white/10"
+            >
+              GiftShop
+            </Link>
             <DesktopDrop
               label="Promo"
               openKey={openMenu}
@@ -259,27 +257,49 @@ export default function Header() {
         }`}
       >
         <div className="px-4 py-4 space-y-4 max-h-[66vh] overflow-y-auto overscroll-contain">
-          {MENU_KEYS.map((key) => (
-            <div key={key}>
-              <p className="mb-1 text-sm font-semibold text-white/80">
-                {key === "events"
-                  ? "ทุกงานแสดง"
-                  : key === "giftshop"
-                  ? "GiftShop"
-                  : "Promo"}
-              </p>
-              {MENU_SECTIONS[key].map((item) => (
-                <Link
-                  key={`${key}-${item.to}`}
-                  to={item.to}
-                  className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {/* ทุกงานแสดง */}
+          <div>
+            <p className="mb-1 text-sm font-semibold text-white/80">
+              ทุกงานแสดง
+            </p>
+            {MENU_SECTIONS.events.map((item) => (
+              <Link
+                key={`events-${item.to}`}
+                to={item.to}
+                className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* GiftShop ปุ่มเดียว */}
+          <div>
+            <p className="mb-1 text-sm font-semibold text-white/80">GiftShop</p>
+            <Link
+              to={SHOP_PATH}
+              className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
+              onClick={() => setMobileOpen(false)}
+            >
+              ดูสินค้าทั้งหมด
+            </Link>
+          </div>
+
+          {/* Promo */}
+          <div>
+            <p className="mb-1 text-sm font-semibold text-white/80">Promo</p>
+            {MENU_SECTIONS.promo.map((item) => (
+              <Link
+                key={`promo-${item.to}`}
+                to={item.to}
+                className="block rounded-lg px-3 py-2 text-base hover:bg-white/10"
+                onClick={() => setMobileOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </header>

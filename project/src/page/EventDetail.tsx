@@ -1,5 +1,9 @@
+// src/page/EventDetail.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "../firebase";
+import type { Event } from "../data/eventconcert";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
 import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
@@ -8,7 +12,7 @@ import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-const ALL_EVENTS = [
+const ALL_EVENTS: Event[] = [
   ...CONCERT_EVENTS,
   ...BOXING_EVENTS,
   ...PERFORMANCE_EVENTS,
@@ -37,6 +41,11 @@ export default function EventDetail() {
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
+  // state สำหรับ event ที่จะเอามาแสดง + loading
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // โหลด user จาก localStorage
   useEffect(() => {
     const raw = localStorage.getItem("loggedInUser");
     if (raw) {
@@ -48,17 +57,65 @@ export default function EventDetail() {
     }
   }, []);
 
-  const event = ALL_EVENTS.find((e) => e.id === id);
+  // หา event จาก data + Firestore
+  useEffect(() => {
+    if (!id) return;
 
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-sm text-slate-600">ไม่พบงานแสดง</p>
-      </div>
-    );
-  }
+    setLoading(true);
+
+    // 1) หาใน data เดิมก่อน
+    const fromBase = ALL_EVENTS.find((e) => e.id === id);
+    if (fromBase) {
+      setEvent(fromBase);
+      setLoading(false);
+      return;
+    }
+
+    // 2) ถ้าไม่เจอ ไปหาใน Firestore
+    const fetchFromFirestore = async () => {
+      try {
+        const q = query(
+          collection(db, "events"),
+          where("id", "==", id),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+
+        if (!snap.empty) {
+          const data = snap.docs[0].data() as any;
+
+          const fromDb: Event = {
+            id: data.id ?? id,
+            title: data.title ?? "",
+            subtitle: data.subtitle ?? "",
+            banner: data.banner ?? "",
+            dateRange: data.dateRange ?? "",
+            Time: data.Time ?? "",
+            stageImage: data.stageImage ?? "",
+            venue: data.venue ?? "",
+            description: data.description ?? "",
+            prices: Array.isArray(data.prices)
+              ? data.prices.map((p: any) => ({
+                  name: String(p.name ?? ""),
+                  price: Number(p.price ?? 0),
+                }))
+              : [],
+          };
+
+          setEvent(fromDb);
+        } else {
+          setEvent(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFromFirestore();
+  }, [id]);
 
   const handleGoPayment = () => {
+    if (!event) return;
     if (!user) {
       setShowLoginPrompt(true);
       return;
@@ -68,6 +125,7 @@ export default function EventDetail() {
   };
 
   const handleAddToCart = () => {
+    if (!event) return;
     if (!user) {
       setShowLoginPrompt(true);
       return;
@@ -110,6 +168,28 @@ export default function EventDetail() {
     navigate("/cart");
   };
 
+  // ระหว่างโหลด
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="py-10 text-center text-slate-600">กำลังโหลด...</main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // หาไม่เจอทั้ง data + Firestore
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="py-10 text-center text-slate-600">ไม่พบงานแสดง</main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -131,20 +211,18 @@ export default function EventDetail() {
               {event.subtitle && (
                 <p className="text-sm text-slate-200">{event.subtitle}</p>
               )}
-              {(event as any).dateRange && (
+              {event.dateRange && (
                 <p className="text-sm text-slate-200">
-                  วันจัดงาน {(event as any).dateRange}
+                  วันจัดงาน {event.dateRange}
                 </p>
               )}
-              {(event as any).venue && (
+              {event.venue && (
                 <p className="text-sm text-slate-200">
-                  สถานที่จัดงาน {(event as any).venue}
+                  สถานที่จัดงาน {event.venue}
                 </p>
               )}
-              {(event as any).Time && (
-                <p className="text-sm text-slate-200">
-                  เวลา {(event as any).Time}
-                </p>
+              {event.Time && (
+                <p className="text-sm text-slate-200">เวลา {event.Time}</p>
               )}
 
               <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
@@ -175,10 +253,10 @@ export default function EventDetail() {
           </div>
         )}
 
-        {(event as any).stageImage && (
+        {event.stageImage && (
           <div className="flex justify-center pb-8">
             <img
-              src={(event as any).stageImage}
+              src={event.stageImage}
               alt="ผังที่นั่ง"
               className="max-w-full rounded-lg object-contain"
             />

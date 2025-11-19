@@ -9,10 +9,11 @@ import {
   type User,
   type UserCredential,
 } from "firebase/auth";
-import { auth } from "../firebase.ts";
+import { auth } from "../firebase";
 
 type UserAuthContextType = {
   user: User | null;
+  loading: boolean;
   logIn: (email: string, password: string) => Promise<UserCredential>;
   signUp: (email: string, password: string) => Promise<UserCredential>;
   logOut: () => Promise<void>;
@@ -28,6 +29,7 @@ export function UserAuthContextProvider({
   children,
 }: UserAuthContextProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   function logIn(email: string, password: string) {
     return signInWithEmailAndPassword(auth, email, password);
@@ -43,14 +45,15 @@ export function UserAuthContextProvider({
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth state changed:", currentUser);
+      console.log("Auth state changed:", currentUser?.uid, currentUser?.email);
       setUser(currentUser);
+      setLoading(false);
     });
     return () => unsubscribe();
   }, []);
 
   return (
-    <UserAuthContext.Provider value={{ user, logIn, signUp, logOut }}>
+    <UserAuthContext.Provider value={{ user, loading, logIn, signUp, logOut }}>
       {children}
     </UserAuthContext.Provider>
   );
