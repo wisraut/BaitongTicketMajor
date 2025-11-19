@@ -1,6 +1,6 @@
-import Section from "../components/useall/Section";
-import Footer from "../components/useall/Footer";
-import Header from "../components/useall/Header";
+import Section from "../components/base/Section";
+import Footer from "../components/base/Footer";
+import Header from "../components/base/Header";
 import type { EventItem } from "../components/home/EventCard";
 import { EVENTS as SPORTS_EVENTS,
         type Event as SportEvent, 

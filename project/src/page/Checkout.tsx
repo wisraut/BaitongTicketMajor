@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/useall/Header";
-import Footer from "../components/useall/Footer";
+import Header from "../components/base/Header";
+import Footer from "../components/base/Footer";
+import QRCodePopup from "../components/shop/qrcode";
 
 type CartItem = {
   id: string;
@@ -12,7 +13,44 @@ type CartItem = {
   option?: string;
   unitPrice: number;
   quantity: number;
+  eventDate?: string;
+  eventVenue?: string;
 };
+
+// โครง CartItem ที่จะเก็บใน orderHistory (ให้ตรงกับ History / Payment)
+type HistoryCartItem = {
+  id: string;
+  type: "event" | "product";
+  title: string;
+  image: string;
+  option?: string;
+  unitPrice: number;
+  quantity: number;
+  eventdate?: string;
+  eventlocation?: string;
+  eventtime?: string;
+};
+
+type OrderHistoryItem = {
+  id: string;
+  email: string;
+  type: "event" | "product" | "mixed";
+  items: HistoryCartItem[];
+  totalAmount: number;
+  createdAt: string;
+  buyerName?: string;
+  contactEmail?: string;
+  phone?: string;
+  paymentMethod?: string;
+};
+
+type LoggedInUser = {
+  name?: string;
+  email?: string;
+  uid?: string;
+};
+
+const HISTORY_KEY = "orderHistory";
 
 export default function CheckoutPage() {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -20,20 +58,46 @@ export default function CheckoutPage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<"mobile" | "card" | "onsite">("mobile");
+
+  const [showQR, setShowQR] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
 
   const navigate = useNavigate();
 
+  // โหลด cart จาก localStorage
   useEffect(() => {
     const raw = localStorage.getItem("cartItems");
     if (!raw) return;
     try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        setItems(parsed);
-      }
+      const parsed = JSON.parse(raw) as CartItem[];
+      if (Array.isArray(parsed)) setItems(parsed);
     } catch (err) {
       console.error("Failed to parse cart items from localStorage", err);
     }
+  }, []);
+
+  // โหลด loggedInUser เพื่อ prefill และใช้ email จริงตอนบันทึก history
+  useEffect(() => {
+    const rawUser = localStorage.getItem("loggedInUser");
+    if (!rawUser) return;
+
+    try {
+      const parsed = JSON.parse(rawUser) as LoggedInUser;
+      setLoggedInUser(parsed);
+
+      if (parsed.email && !email) {
+        setEmail(parsed.email);
+      }
+      if (parsed.name && !fullName) {
+        setFullName(parsed.name);
+      }
+    } catch {
+      setLoggedInUser(null);
+    }
+    // ไม่อยากให้ effect ยิงซ้ำเวลาพิมพ์ email/fullName เลยไม่ใส่เป็น dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const subtotal = items.reduce(
@@ -41,31 +105,105 @@ export default function CheckoutPage() {
     0
   );
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
     if (items.length === 0) {
       alert("ยังไม่มีสินค้าในตะกร้า");
       return;
     }
 
     if (!fullName || !email || !phone) {
-      alert("กรุณากรอกข้อมูลที่จำเป็นให้ครบ");
+      alert("กรุณากรอกชื่อ, อีเมล และเบอร์โทรศัพท์ให้ครบ");
       return;
     }
 
-    alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
+    // บังคับว่าต้องมี @ ในอีเมล
+    if (!email.includes("@")) {
+      alert("กรุณากรอกอีเมลให้ถูกต้อง (ต้องมีเครื่องหมาย @)");
+      return;
+    }
 
+    // ผ่าน validation แล้วค่อยเปิด QR (ยังไม่บันทึก history จนกดชำระเงินแล้ว)
+    setShowQR(true);
+  };
+
+  const getPaymentMethodText = () => {
+    if (paymentMethod === "mobile") return "โอนผ่าน Mobile Banking";
+    if (paymentMethod === "card") return "บัตรเครดิต / เดบิต";
+    return "จ่ายปลายทางที่หน้างาน";
+  };
+
+  // ฟังก์ชันนี้จะถูกเรียกตอนกด "ชำระเงินแล้ว" บน popup QR
+  const handlePaidFromQR = () => {
+    // ----- โหลด history เดิมจาก orderHistory -----
+    const rawHistory = localStorage.getItem(HISTORY_KEY);
+    let history: OrderHistoryItem[] = [];
+    if (rawHistory) {
+      try {
+        const parsed = JSON.parse(rawHistory) as OrderHistoryItem[];
+        if (Array.isArray(parsed)) history = parsed;
+      } catch {
+        history = [];
+      }
+    }
+
+    // ใช้ email จาก loggedInUser เป็นหลัก ถ้ามี
+    let loginEmail = email.trim();
+    if (loggedInUser?.email) {
+      loginEmail = loggedInUser.email;
+    }
+
+    // map CartItem เป็น HistoryCartItem
+    const historyItems: HistoryCartItem[] = items.map((item) => ({
+      id: item.id,
+      type: item.type,
+      title: item.title,
+      image: item.image,
+      option: item.option,
+      unitPrice: item.unitPrice,
+      quantity: item.quantity,
+      eventdate: item.eventDate,
+      eventlocation: item.eventVenue,
+      eventtime: undefined,
+    }));
+
+    // หาประเภทของ order: event / product / mixed
+    const hasEvent = historyItems.some((i) => i.type === "event");
+    const hasProduct = historyItems.some((i) => i.type === "product");
+    let orderType: "event" | "product" | "mixed" = "event";
+    if (hasEvent && hasProduct) orderType = "mixed";
+    else if (!hasEvent && hasProduct) orderType = "product";
+
+    const newOrder: OrderHistoryItem = {
+      id: `ORD-${Date.now()}`,
+      email: loginEmail,
+      type: orderType,
+      items: historyItems,
+      totalAmount: subtotal,
+      createdAt: new Date().toISOString(),
+      buyerName: fullName.trim(),
+      contactEmail: email.trim(),
+      phone: phone.trim(),
+      paymentMethod: getPaymentMethodText(),
+    };
+
+    const merged = [...history, newOrder];
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+
+    // ล้าง cart
     localStorage.removeItem("cartItems");
-    navigate("/");
+    setItems([]);
+
+    setShowQR(false);
+    navigate("/"); // กลับหน้า Home
   };
 
   return (
     <div className="min-h-screen bg-slate-100">
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="mb-6 text-xl font-bold text-slate-900">
-          ชำระเงิน
-        </h1>
+        <h1 className="mb-6 text-xl font-bold text-slate-900">ชำระเงิน</h1>
 
         {items.length === 0 ? (
           <p className="text-sm text-slate-600">
@@ -73,7 +211,7 @@ export default function CheckoutPage() {
           </p>
         ) : (
           <div className="grid gap-6 lg:grid-cols-[3fr,2fr]">
-            {/* ฟอร์มกรอกข้อมูลผู้ซื้อ */}
+            {/* ฟอร์มผู้ซื้อ */}
             <form
               onSubmit={handleSubmit}
               className="space-y-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
@@ -95,9 +233,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm text-slate-700">
-                  อีเมล
-                </label>
+                <label className="block text-sm text-slate-700">อีเมล</label>
                 <input
                   type="email"
                   value={email}
@@ -142,17 +278,30 @@ export default function CheckoutPage() {
                     <input
                       type="radio"
                       name="pay"
-                      defaultChecked
                       className="h-4 w-4"
+                      checked={paymentMethod === "mobile"}
+                      onChange={() => setPaymentMethod("mobile")}
                     />
                     โอนผ่าน Mobile Banking
                   </label>
                   <label className="flex items-center gap-2">
-                    <input type="radio" name="pay" className="h-4 w-4" />
+                    <input
+                      type="radio"
+                      name="pay"
+                      className="h-4 w-4"
+                      checked={paymentMethod === "card"}
+                      onChange={() => setPaymentMethod("card")}
+                    />
                     บัตรเครดิต / เดบิต
                   </label>
                   <label className="flex items-center gap-2">
-                    <input type="radio" name="pay" className="h-4 w-4" />
+                    <input
+                      type="radio"
+                      name="pay"
+                      className="h-4 w-4"
+                      checked={paymentMethod === "onsite"}
+                      onChange={() => setPaymentMethod("onsite")}
+                    />
                     จ่ายปลายทางที่หน้างาน (สำหรับบัตรงานแสดงที่รองรับ)
                   </label>
                 </div>
@@ -166,7 +315,7 @@ export default function CheckoutPage() {
               </button>
             </form>
 
-            {/* สรุปรายการจากตะกร้า */}
+            {/* สรุปรายการ */}
             <aside className="space-y-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 text-sm">
               <h2 className="text-base font-semibold text-slate-900">
                 สรุปรายการในตะกร้า
@@ -194,8 +343,18 @@ export default function CheckoutPage() {
                           ตัวเลือก: {item.option}
                         </p>
                       )}
+                      {item.eventDate && (
+                        <p className="text-[12px] text-slate-600">
+                          วันที่แสดง: {item.eventDate}
+                        </p>
+                      )}
+                      {item.eventVenue && (
+                        <p className="text-[12px] text-slate-600">
+                          สถานที่: {item.eventVenue}
+                        </p>
+                      )}
                       <p className="text-[12px] text-slate-500">
-                        จำนวน {item.quantity} ชิ้น
+                        จำนวน {item.quantity} ใบ
                       </p>
                       <p className="text-[12px] font-semibold text-slate-900">
                         {(item.unitPrice * item.quantity).toLocaleString()} บาท
@@ -214,6 +373,14 @@ export default function CheckoutPage() {
         )}
       </main>
       <Footer />
+
+      {showQR && (
+        <QRCodePopup
+          amount={subtotal}
+          onClose={() => setShowQR(false)}
+          onPaid={handlePaidFromQR}
+        />
+      )}
     </div>
   );
 }

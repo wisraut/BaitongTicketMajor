@@ -230,7 +230,7 @@ export default function Header() {
             </Link>
           )}
 
-          {/* profile dropdown (ใช้ได้ทั้ง desktop + กด mobile icon ตอนล็อกอินแล้ว) */}
+          {/* profile dropdown desktop */}
           {user && (
             <div className="relative hidden lg:block" ref={profileRef}>
               <button
@@ -245,13 +245,23 @@ export default function Header() {
               </button>
 
               {profileOpen && (
-                <div className="absolute right-0 mt-2 w-40 rounded-lg bg-white py-2 text-slate-700 shadow-lg">
+                <div className="absolute right-0 mt-2 w-44 rounded-lg bg-white py-2 text-slate-700 shadow-lg">
                   <p className="px-3 pb-2 text-xs text-slate-400">
                     เข้าสู่ระบบแล้ว
                   </p>
+
+                  {/* ปุ่มไปหน้า History */}
+                  <Link
+                    to="/history"
+                    onClick={() => setProfileOpen(false)}
+                    className="block w-full px-3 py-2 text-sm hover:bg-slate-100"
+                  >
+                    ประวัติการสั่งซื้อ
+                  </Link>
+
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100"
+                    className="mt-1 flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-slate-100"
                   >
                     <LogOut className="h-4 w-4" /> Logout
                   </button>
@@ -316,23 +326,33 @@ export default function Header() {
             Promo
           </Link>
 
-          {/* แถวล่างสำหรับ login / account บน mobile */}
+          {/* login / account mobile */}
           <div className="pt-3 border-t border-white/15">
             {user ? (
               <div className="space-y-2 text-sm text-white/90">
-                <p className="text-xs text-white/70">
-                  {displayName}
-                </p>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileOpen(false);
-                  }}
-                  className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </button>
+                <p className="text-xs text-white/70">{displayName}</p>
+
+                {/* ปุ่มสำหรับ mobile: History + Logout แยกกันด้วย gap */}
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to="/history"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex flex-1 min-w-[120px] justify-center rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
+                  >
+                    ประวัติการสั่งซื้อ
+                  </Link>
+
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileOpen(false);
+                    }}
+                    className="inline-flex flex-1 min-w-[120px] items-center justify-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm hover:bg-white/20"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <Link
