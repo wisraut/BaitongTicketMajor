@@ -14,8 +14,8 @@ import {
   type Event as PerformanceEvent,
 } from "../data/eventperformance";
 
-import Header from "../components/useall/Header";
-import Footer from "../components/useall/Footer";
+import Header from "../components/base/Header";
+import Footer from "../components/base/Footer";
 import { Select } from "@radix-ui/themes";
 
 type EventDetail = ConcertEvent | BoxingEvent | PerformanceEvent;

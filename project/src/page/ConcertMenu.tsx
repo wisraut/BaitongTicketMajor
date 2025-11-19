@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router-dom";
-import Header from "../components/useall/Header";
-import Footer from "../components/useall/Footer";
-import Section from "../components/useall/Section";
+import Header from "../components/base/Header";
+import Footer from "../components/base/Footer";
+import Section from "../components/base/Section";
 //import Pagination from "../components/useall/Pagination";
 
 import {

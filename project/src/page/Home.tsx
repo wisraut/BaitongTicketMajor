@@ -1,9 +1,9 @@
 import { useSearchParams } from "react-router-dom";
 
-import Section from "../components/useall/Section";
-import Footer from "../components/useall/Footer";
-import Header from "../components/useall/Header";
-import FrontBanner from "../components/useall/FrontBanner";
+import Section from "../components/base/Section";
+import Footer from "../components/base/Footer";
+import Header from "../components/base/Header";
+import FrontBanner from "../components/home/FrontBanner";
 import type { EventItem } from "../components/home/EventCard";
 
 import {

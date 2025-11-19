@@ -1,5 +1,5 @@
-import Header from "../components/useall/Header";
-import Footer from "../components/useall/Footer";
+import Header from "../components/base/Header";
+import Footer from "../components/base/Footer";
 import { useEffect, useState } from "react";
 
 type CartItem = {
