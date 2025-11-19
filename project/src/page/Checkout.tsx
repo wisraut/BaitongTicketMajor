@@ -63,9 +63,7 @@ export default function CheckoutPage() {
     <div className="min-h-screen bg-slate-100">
       <Header />
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <h1 className="mb-6 text-xl font-bold text-slate-900">
-          ชำระเงิน
-        </h1>
+        <h1 className="mb-6 text-xl font-bold text-slate-900">ชำระเงิน</h1>
 
         {items.length === 0 ? (
           <p className="text-sm text-slate-600">
@@ -95,9 +93,7 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-sm text-slate-700">
-                  อีเมล
-                </label>
+                <label className="block text-sm text-slate-700">อีเมล</label>
                 <input
                   type="email"
                   value={email}
@@ -206,8 +202,16 @@ export default function CheckoutPage() {
               </div>
 
               <div className="border-t border-slate-200 pt-3 flex justify-between font-semibold">
+                <img src="./qrcode.jpg" />
                 <span>ยอดชำระรวม</span>
                 <span>{subtotal.toLocaleString()} บาท</span>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <img
+                  src="/qrcode.jpg"
+                  alt="QR Code สำหรับชำระเงิน"
+                  className="w-40 h-40 object-contain"
+                />
               </div>
             </aside>
           </div>

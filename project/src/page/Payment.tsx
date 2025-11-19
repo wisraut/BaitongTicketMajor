@@ -68,6 +68,7 @@ export default function PaymentPage() {
           </p>
         ) : (
           <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
+            {/* ฟอร์มข้อมูลผู้ซื้อ */}
             <form
               onSubmit={handleSubmit}
               className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
@@ -131,10 +132,12 @@ export default function PaymentPage() {
               </button>
             </form>
 
+            {/* สรุปรายการ + QR */}
             <aside className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
               <h2 className="text-sm font-semibold text-slate-900">
                 สรุปรายการ
               </h2>
+
               <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
                 {items.map((item) => (
                   <div
@@ -156,10 +159,22 @@ export default function PaymentPage() {
                   </div>
                 ))}
               </div>
+
               <hr className="my-2" />
+
+              {/* บรรทัดยอดรวม */}
               <div className="flex justify-between text-sm font-semibold text-slate-900">
                 <span>ยอดรวมทั้งหมด</span>
                 <span>{total.toLocaleString()} บาท</span>
+              </div>
+
+              {/* QR Code ใต้ยอดรวม */}
+              <div className="mt-6 flex justify-center">
+                <img
+                  src="/qrcode.jpg"
+                  alt="QR Code สำหรับชำระเงิน"
+                  className="w-64 h-64 object-contain"
+                />
               </div>
             </aside>
           </div>
