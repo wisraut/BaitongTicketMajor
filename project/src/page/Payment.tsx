@@ -12,7 +12,31 @@ type CartItem = {
   option?: string;
   unitPrice: number;
   quantity: number;
+  eventdate?: string;
+  eventlocation?: string;
+  eventtime?: string;
 };
+
+type OrderHistoryItem = {
+  id: string;
+  email: string;
+  type: "event" | "product" | "mixed";
+  items: CartItem[];
+  totalAmount: number;
+  createdAt: string;
+  buyerName?: string;
+  contactEmail?: string;
+  phone?: string;
+  paymentMethod?: string;
+};
+
+type LoggedInUser = {
+  name?: string;
+  email?: string;
+  uid?: string;
+};
+
+const HISTORY_KEY = "orderHistory";
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -22,6 +46,7 @@ export default function PaymentPage() {
   const [phone, setPhone] = useState("");
   const [note, setNote] = useState("");
 
+  // โหลดตะกร้า
   useEffect(() => {
     const raw = localStorage.getItem("cartItems");
     if (!raw) return;
@@ -49,10 +74,62 @@ export default function PaymentPage() {
       return;
     }
 
+    // อ่านข้อมูล user ที่ล็อกอิน (ถ้ามี)
+    let loggedEmail = "";
+    try {
+      const rawUser = localStorage.getItem("loggedInUser");
+      if (rawUser) {
+        const parsed = JSON.parse(rawUser) as LoggedInUser;
+        if (parsed.email) loggedEmail = parsed.email.toLowerCase();
+      }
+    } catch {
+      loggedEmail = "";
+    }
+
+    // หา type ของออเดอร์ (event / product / mixed)
+    const types = new Set(items.map((i) => i.type));
+    let orderType: OrderHistoryItem["type"];
+    if (types.size === 1) {
+      orderType = types.has("event") ? "event" : "product";
+    } else {
+      orderType = "mixed";
+    }
+
+    const now = new Date();
+
+    const newOrder: OrderHistoryItem = {
+      id: `ORD-${now.getTime()}`, // ไอดีออเดอร์ง่ายๆ จาก timestamp
+      email: (loggedEmail || email).toLowerCase(),
+      type: orderType,
+      items,
+      totalAmount: total,
+      createdAt: now.toISOString(),
+      buyerName: name,
+      contactEmail: email,
+      phone,
+      paymentMethod: "QR Payment",
+    };
+
+    // ดึง history เดิมจาก localStorage
+    let history: OrderHistoryItem[] = [];
+    const rawHistory = localStorage.getItem(HISTORY_KEY);
+    if (rawHistory) {
+      try {
+        const parsed = JSON.parse(rawHistory);
+        if (Array.isArray(parsed)) history = parsed;
+      } catch {
+        history = [];
+      }
+    }
+
+    history.push(newOrder);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
     alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
 
+    // เคลียร์ตะกร้า แล้วไปหน้า history
     localStorage.removeItem("cartItems");
-    navigate("/");
+    navigate("/history");
   };
 
   return (
@@ -162,13 +239,11 @@ export default function PaymentPage() {
 
               <hr className="my-2" />
 
-              {/* บรรทัดยอดรวม */}
               <div className="flex justify-between text-sm font-semibold text-slate-900">
                 <span>ยอดรวมทั้งหมด</span>
                 <span>{total.toLocaleString()} บาท</span>
               </div>
 
-              {/* QR Code ใต้ยอดรวม */}
               <div className="mt-6 flex justify-center">
                 <img
                   src="/qrcode.jpg"

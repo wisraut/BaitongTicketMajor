@@ -1,6 +1,7 @@
+// src/page/History.tsx
+import { useEffect, useState } from "react";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
-import { useEffect, useState } from "react";
 
 type CartItem = {
   id: string;
@@ -52,7 +53,7 @@ export default function HistoryPage() {
     }
   }, []);
 
-  // โหลดประวัติคำสั่งซื้อ
+  // โหลดประวัติคำสั่งซื้อทั้งหมดจาก localStorage
   useEffect(() => {
     const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) return;
@@ -78,7 +79,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-screen bg-slate-100 flex flex-col">
       <Header />
-      {/* full width ของ viewport เหลือ padding รอบ ๆ */}
+
       <main className="flex-1 w-full px-3 sm:px-6 lg:px-10 py-8">
         <h1 className="mb-4 text-xl font-bold text-slate-900">
           ประวัติการสั่งซื้อ
@@ -123,6 +124,7 @@ export default function HistoryPage() {
                       </p>
                     )}
                   </div>
+
                   <div className="text-right">
                     <p className="text-[11px] text-slate-500">ยอดรวม</p>
                     <p className="text-sm font-semibold text-slate-900">
@@ -187,6 +189,7 @@ export default function HistoryPage() {
           </div>
         )}
       </main>
+
       <Footer />
     </div>
   );
