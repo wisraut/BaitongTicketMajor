@@ -1,30 +1,28 @@
+// src/page/EventDetail.tsx
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { collection, getDocs, query, where, limit } from "firebase/firestore";
+import { db } from "../firebase";
+import type { Event } from "../data/eventconcert";
 
-import {
-  EVENTS as CONCERT_EVENTS,
-  type Event as ConcertEvent,
-} from "../data/eventconcert";
-import {
-  EVENTS as BOXING_EVENTS,
-  type Event as BoxingEvent,
-} from "../data/eventboxing";
-import {
-  EVENTS as PERFORMANCE_EVENTS,
-  type Event as PerformanceEvent,
-} from "../data/eventperformance";
+import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
+import { EVENTS as BOXING_EVENTS } from "../data/eventboxing";
+import { EVENTS as PERFORMANCE_EVENTS } from "../data/eventperformance";
 
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-type EventDetail = ConcertEvent | BoxingEvent | PerformanceEvent;
-type PriceTier = EventDetail["prices"][number];
-
-const ALL_EVENTS: EventDetail[] = [
+const ALL_EVENTS: Event[] = [
   ...CONCERT_EVENTS,
   ...BOXING_EVENTS,
   ...PERFORMANCE_EVENTS,
 ];
+
+type LoggedInUser = {
+  email: string;
+  phone?: string;
+  name?: string;
+};
 
 type CartItem = {
   id: string;
@@ -40,219 +38,205 @@ export default function EventDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [event, setEvent] = useState<EventDetail | null>(null);
-  const [selectedTierName, setSelectedTierName] = useState<string>("");
-  const [ticketQty, setTicketQty] = useState(1);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [user, setUser] = useState<LoggedInUser | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
+  // state สำหรับ event ที่จะเอามาแสดง + loading
+  const [event, setEvent] = useState<Event | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // โหลด user จาก localStorage
+  useEffect(() => {
+    const raw = localStorage.getItem("loggedInUser");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    }
+  }, []);
+
+  // หา event จาก data + Firestore
   useEffect(() => {
     if (!id) return;
-    const found = ALL_EVENTS.find((ev) => ev.id === id);
-    if (!found) {
-      navigate("/events");
+
+    setLoading(true);
+
+    // 1) หาใน data เดิมก่อน
+    const fromBase = ALL_EVENTS.find((e) => e.id === id);
+    if (fromBase) {
+      setEvent(fromBase);
+      setLoading(false);
       return;
     }
-    setEvent(found);
-  }, [id, navigate]);
 
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <p className="text-sm text-slate-500">กำลังโหลดข้อมูลงานแสดง...</p>
-      </div>
-    );
-  }
+    // 2) ถ้าไม่เจอ ไปหาใน Firestore
+    const fetchFromFirestore = async () => {
+      try {
+        const q = query(
+          collection(db, "events"),
+          where("id", "==", id),
+          limit(1)
+        );
+        const snap = await getDocs(q);
 
-  const handleBookNow = () => {
+        if (!snap.empty) {
+          const data = snap.docs[0].data() as any;
+
+          const fromDb: Event = {
+            id: data.id ?? id,
+            title: data.title ?? "",
+            subtitle: data.subtitle ?? "",
+            banner: data.banner ?? "",
+            dateRange: data.dateRange ?? "",
+            Time: data.Time ?? "",
+            stageImage: data.stageImage ?? "",
+            venue: data.venue ?? "",
+            description: data.description ?? "",
+            prices: Array.isArray(data.prices)
+              ? data.prices.map((p: any) => ({
+                  name: String(p.name ?? ""),
+                  price: Number(p.price ?? 0),
+                }))
+              : [],
+          };
+
+          setEvent(fromDb);
+        } else {
+          setEvent(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFromFirestore();
+  }, [id]);
+
+  const handleGoPayment = () => {
+    if (!event) return;
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
     localStorage.setItem("currentEventId", event.id);
     navigate("/payment");
   };
 
   const handleAddToCart = () => {
-    // ต้องล็อกอินก่อน
-    const rawUser = localStorage.getItem("loggedInUser");
-    if (!rawUser) {
+    if (!event) return;
+    if (!user) {
       setShowLoginPrompt(true);
       return;
     }
 
-    // ต้องเลือกประเภทบัตรก่อน
-    if (!selectedTierName) {
-      setErrorMessage("กรุณาเลือกประเภทบัตรก่อนเพิ่มลงตะกร้า");
-      return;
-    }
+    const prices = (event as any).prices as
+      | { name: string; price: number }[]
+      | undefined;
 
-    const tier = event.prices.find((p) => p.name === selectedTierName);
-    if (!tier) {
-      setErrorMessage("ไม่พบบัตรที่เลือก ลองใหม่อีกครั้ง");
-      return;
-    }
+    const defaultTier = prices && prices.length > 0 ? prices[0] : undefined;
 
-    const rawCart = localStorage.getItem("cartItems");
-    let cart: CartItem[] = [];
-    if (rawCart) {
-      try {
-        const parsed = JSON.parse(rawCart);
-        if (Array.isArray(parsed)) {
-          cart = parsed;
-        }
-      } catch {
-        cart = [];
-      }
-    }
-
-    const newItem: CartItem = {
-      id: `${event.id}-${tier.name}`,
+    const cartItem: CartItem = {
+      id: defaultTier
+        ? `${event.id}:${defaultTier.name}`
+        : `${event.id}:default`,
       type: "event",
       title: event.title,
       image: event.banner,
-      option: tier.name,
-      unitPrice: tier.price,
-      quantity: ticketQty,
+      option: defaultTier ? defaultTier.name : undefined,
+      unitPrice: defaultTier ? defaultTier.price : 0,
+      quantity: 1,
     };
 
-    // ถ้ามีบัตรใบเดิมในตะกร้าแล้ว → บวกจำนวนเพิ่ม
-    const existingIndex = cart.findIndex(
-      (item) =>
-        item.type === "event" &&
-        item.id === newItem.id &&
-        item.option === newItem.option
-    );
-
-    if (existingIndex >= 0) {
-      const prev = cart[existingIndex];
-      cart[existingIndex] = {
-        ...prev,
-        quantity: prev.quantity + ticketQty,
-      };
-    } else {
-      cart.push(newItem);
+    const raw = localStorage.getItem("cartItems");
+    let items: CartItem[] = [];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          items = parsed;
+        }
+      } catch {
+        items = [];
+      }
     }
 
-    localStorage.setItem("cartItems", JSON.stringify(cart));
-    setErrorMessage(null);
+    items.push(cartItem);
+    localStorage.setItem("cartItems", JSON.stringify(items));
+
     navigate("/cart");
   };
-  const selectTier = event.prices.find(
-    (p) => p.name === selectedTierName
-  );
-  const totalPreview =
-    selectTier && ticketQty > 0
-      ? selectTier.price * ticketQty
-      : 0;
+
+  // ระหว่างโหลด
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="py-10 text-center text-slate-600">กำลังโหลด...</main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // หาไม่เจอทั้ง data + Firestore
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <main className="py-10 text-center text-slate-600">ไม่พบงานแสดง</main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-white">
       <Header />
-      <main className="bg-slate-900 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-8 md:py-10">
-          <div className="grid gap-6 md:grid-cols-[3fr,4fr] items-start">
-            {/* ซ้าย: รูปโปสเตอร์ */}
-            <div className="flex justify-center">
-              <img
-                src={event.banner}
-                alt={event.title}
-                className="w-full max-w-md rounded-xl object-cover shadow-lg"
-              />
+
+      <div className="bg-black">
+        <div className="max-w-5xl mx-auto px-4 py-8 md:py-10">
+          <div className="flex flex-col md:flex-row gap-6 items-start">
+            <div className="w-full md:w-1/3">
+              {event.banner && (
+                <img
+                  src={event.banner}
+                  alt={event.title}
+                  className="w-full rounded-lg object-cover"
+                />
+              )}
             </div>
+            <div className="flex-1 space-y-3 text-center md:text-left text-white">
+              <h1 className="text-2xl font-bold">{event.title}</h1>
+              {event.subtitle && (
+                <p className="text-sm text-slate-200">{event.subtitle}</p>
+              )}
+              {event.dateRange && (
+                <p className="text-sm text-slate-200">
+                  วันจัดงาน {event.dateRange}
+                </p>
+              )}
+              {event.venue && (
+                <p className="text-sm text-slate-200">
+                  สถานที่จัดงาน {event.venue}
+                </p>
+              )}
+              {event.Time && (
+                <p className="text-sm text-slate-200">เวลา {event.Time}</p>
+              )}
 
-            {/* ขวา: รายละเอียด + เลือกบัตร */}
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">
-                  {event.title}
-                </h1>
-                {event.subtitle && (
-                  <p className="mt-1 text-sm text-slate-200">
-                    {event.subtitle}
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-1 text-sm">
-                {event.dateRange && (
-                  <p className="text-slate-200">วันจัดงาน {event.dateRange}</p>
-                )}
-                {event.venue && (
-                  <p className="text-slate-200">สถานที่จัดงาน {event.venue}</p>
-                )}
-                {event.Time && (
-                  <p className="text-slate-200">เวลา {event.Time}</p>
-                )}
-              </div>
-
-              {/* เลือกประเภทบัตร + จำนวน */}
-              <div className="mt-4 space-y-3 rounded-2xl bg-white/5 p-4">
-                <h2 className="text-sm font-semibold">
-                  เลือกประเภทบัตรและจำนวน
-                </h2>
-
-                <div className="grid gap-3 md:grid-cols-[2fr,1fr] items-end">
-                  <div className="space-y-2">
-                    <label className="block text-xs text-slate-200">
-                      ประเภทบัตร
-                    </label>
-                    <select
-                      value={selectedTierName}
-                      onChange={(e) => {
-                        setSelectedTierName(e.target.value);
-                        setErrorMessage(null);
-                      }}
-                      className="w-full rounded-lg border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/70"
-                    >
-                      <option value="">เลือกประเภทบัตร</option>
-                      {event.prices.map((tier: PriceTier) => (
-                        <option key={tier.name} value={tier.name}>
-                          {tier.name} – {tier.price.toLocaleString()} บาท
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-xs text-slate-200">
-                      จำนวนบัตร
-                    </label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={ticketQty}
-                      onChange={(e) =>
-                        setTicketQty(Math.max(1, Number(e.target.value) || 1))
-                      }
-                      className="w-24 rounded-lg border border-white/20 bg-slate-900/60 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-400/70"
-                    />
-                  </div>
-                </div>
-
-                {totalPreview > 0 && (
-                  <p className="text-xs text-slate-200">
-                    ยอดชำระโดยประมาณ{" "}
-                    <span className="font-semibold">
-                      {totalPreview.toLocaleString()} บาท
-                    </span>
-                  </p>
-                )}
-
-                {errorMessage && (
-                  <p className="text-xs text-red-300">{errorMessage}</p>
-                )}
-              </div>
-
-              {/* ปุ่ม action */}
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
                 <button
                   type="button"
-                  onClick={handleBookNow}
-                  className="rounded-full bg-red-500 px-6 py-2 text-sm font-semibold text-white hover:bg-red-600 transition"
+                  onClick={handleGoPayment}
+                  className="inline-flex items-center justify-center rounded-full bg-red-600 px-8 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                 >
                   จองบัตร
                 </button>
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  className="rounded-full border border-white/40 px-6 py-2 text-sm font-semibold text-white hover:bg-white/10 transition"
+                  className="inline-flex items-center justify-center rounded-full border border-white/60 px-8 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
                 >
                   เพิ่มลงตะกร้า
                 </button>
@@ -260,37 +244,42 @@ export default function EventDetail() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* กล่องรายละเอียดด้านล่าง */}
-        <section className="bg-slate-100 text-slate-900">
-          <div className="mx-auto max-w-6xl px-4 py-6">
-            <div className="rounded-2xl bg-white p-4 text-sm leading-relaxed shadow-sm">
-              <h2 className="mb-2 text-base font-semibold">
-                เงื่อนไข / รายละเอียดงาน
-              </h2>
-              <p className="whitespace-pre-line">{event.description}</p>
-            </div>
+      <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {event.description && (
+          <div className="rounded-lg border border-slate-200 bg-white p-5 text-sm leading-relaxed text-slate-800">
+            {event.description}
           </div>
-        </section>
-      </main>
+        )}
+
+        {event.stageImage && (
+          <div className="flex justify-center pb-8">
+            <img
+              src={event.stageImage}
+              alt="ผังที่นั่ง"
+              className="max-w-full rounded-lg object-contain"
+            />
+          </div>
+        )}
+      </div>
 
       <Footer />
 
-      {/* popup ให้ล็อกอินก่อน */}
       {showLoginPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-5 text-slate-900 shadow-xl">
-            <h3 className="mb-2 text-base font-semibold">
-              กรุณาเข้าสู่ระบบก่อน
-            </h3>
-            <p className="mb-4 text-sm text-slate-600">
-              คุณต้องเข้าสู่ระบบก่อนจึงจะสามารถเพิ่มบัตรลงตะกร้าได้
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-lg">
+            <h2 className="text-lg font-semibold text-slate-900 mb-2">
+              กรุณาเข้าสู่ระบบ
+            </h2>
+            <p className="text-sm text-slate-600 mb-4">
+              กรุณาเข้าสู่ระบบก่อนทำการจองบัตรหรือเพิ่มงานแสดงลงตะกร้า
             </p>
-            <div className="flex justify-end gap-3 text-sm">
+            <div className="flex justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowLoginPrompt(false)}
-                className="rounded-lg px-3 py-1.5 text-slate-600 hover:bg-slate-100"
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
               >
                 ยกเลิก
               </button>
@@ -300,7 +289,7 @@ export default function EventDetail() {
                   setShowLoginPrompt(false);
                   navigate("/login");
                 }}
-                className="rounded-lg bg-[#234C6A] px-4 py-1.5 font-semibold text-white"
+                className="rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white"
               >
                 ไปหน้าเข้าสู่ระบบ
               </button>

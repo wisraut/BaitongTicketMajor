@@ -9,8 +9,9 @@ import PerformanceMenuPage from "./page/PerformanceMenu";
 import PaymentPage from "./page/Payment";
 import CartPage from "./page/Cart";
 import CheckoutPage from "./page/Checkout";
-
-
+import ShopMenuPage from "./page/SportMenu";
+import AdminPage from "./page/Admin";
+import RequireAdmin from "./route/RequireAdmin";
 
 export default function App() {
   return (
@@ -23,12 +24,20 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/events" element={<div className="p-6">Events page</div>} />
       <Route path="/promo" element={<div className="p-6">Promo page</div>} />
-      <Route path="/cart" element={<CartPage/>} />
+      <Route path="/cart" element={<CartPage />} />
       <Route path="/help" element={<div className="p-6">Help page</div>} />
       <Route path="/events/:id" element={<EventDetail />} />
       <Route path="/payment" element={<PaymentPage />} />
-      <Route path="/checkout" element={<CheckoutPage/>} />
-      <Route path="*" element={<div className="p-6">404 Not Found</div>} />
+      <Route path="/checkout" element={<CheckoutPage />} />
+      <Route path="/shop" element={<ShopMenuPage />} />
+      <Route
+        path="/admin"
+        element={
+          <RequireAdmin>
+            <AdminPage />
+          </RequireAdmin>
+        }
+      />
     </Routes>
   );
 }

@@ -5,18 +5,12 @@ import App from "./App";
 import { UserAuthContextProvider } from "./context/UserAuthContext";
 import "./index.css";
 
-// Radix UI Theme
-import { Theme } from "@radix-ui/themes";
-import "@radix-ui/themes/styles.css";
-
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    <Theme>
+    <UserAuthContextProvider>
       <BrowserRouter>
-        <UserAuthContextProvider>
-          <App />
-        </UserAuthContextProvider>
+        <App />
       </BrowserRouter>
-    </Theme>
+    </UserAuthContextProvider>
   </React.StrictMode>
 );
