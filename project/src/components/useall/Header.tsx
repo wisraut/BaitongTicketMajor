@@ -15,10 +15,8 @@ const MENU_KEYS = ["events", "promo"] as const;
 type MenuKeyStrict = (typeof MENU_KEYS)[number];
 type MenuKey = MenuKeyStrict | null;
 
-// path ของหน้า ShopMenu
 const SHOP_PATH = "/shop";
 
-// ทำให้แต่ละรายการมี path ของมันเอง
 const MENU_SECTIONS: Record<MenuKeyStrict, { label: string; to: string }[]> = {
   events: [
     { label: "Concerts", to: "/concerts" },

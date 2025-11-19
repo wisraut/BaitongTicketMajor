@@ -1,770 +1,482 @@
 // src/page/Admin.tsx
-import { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "../firebase";
+
+import { FormEvent, useEffect, useState } from "react";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db } from "../firebase";
+
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 
-type AdminKind = "concert" | "sport" | "performance" | "product";
+import AdminEventCard from "../components/admin/AdminEventCard";
+import type { AdminEvent, EventCategory } from "../data/adminEvent";
 
-type EventPrice = {
+// โซนของราคาบัตรที่ใช้ในฟอร์ม
+type PriceRow = {
   name: string;
-  price: number;
+  price: string; // เก็บเป็น string ในฟอร์ม แปลงเป็น number ตอนส่ง
 };
 
 type EventForm = {
-  id: string;
+  eventId: string;
   title: string;
   subtitle: string;
   dateRange: string;
   time: string;
   venue: string;
   description: string;
-  bannerUrl: string;
-  stageImageUrl: string;
-  prices: EventPrice[];
+  bannerPath: string;
+  stageImagePath: string;
+  category: EventCategory;
 };
 
-type ProductVariant = {
-  id: string;
-  label: string;
-  price: number;
+const initialForm: EventForm = {
+  eventId: "",
+  title: "",
+  subtitle: "",
+  dateRange: "",
+  time: "",
+  venue: "",
+  description: "",
+  bannerPath: "",
+  stageImagePath: "",
+  category: "concert",
 };
 
-type ProductForm = {
-  id: string;
-  name: string;
-  subtitle: string;
-  category: "tshirt" | "Assessories";
-  description: string;
-  bannerUrl: string;
-  images: string[];
-  details: string[];
-  variants: ProductVariant[];
-};
+const initialPrices: PriceRow[] = [{ name: "", price: "0" }];
 
-export default function AdminPage() {
-  const [kind, setKind] = useState<AdminKind>("concert");
+export default function Admin() {
+  const [form, setForm] = useState<EventForm>(initialForm);
+  const [prices, setPrices] = useState<PriceRow[]>(initialPrices);
 
-  const [eventForm, setEventForm] = useState<EventForm>({
-    id: "",
-    title: "",
-    subtitle: "",
-    dateRange: "",
-    time: "",
-    venue: "",
-    description: "",
-    bannerUrl: "",
-    stageImageUrl: "",
-    prices: [{ name: "", price: 0 }],
-  });
+  const [events, setEvents] = useState<AdminEvent[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [loadingEvents, setLoadingEvents] = useState(true);
 
-  const [productForm, setProductForm] = useState<ProductForm>({
-    id: "",
-    name: "",
-    subtitle: "",
-    category: "tshirt",
-    description: "",
-    bannerUrl: "",
-    images: [],
-    details: [""],
-    variants: [{ id: "small", label: "Small", price: 0 }],
-  });
+  // โหลด events จาก Firestore แบบ realtime
+  useEffect(() => {
+    const q = query(collection(db, "events"), orderBy("createdAt", "desc"));
 
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [stageFile, setStageFile] = useState<File | null>(null);
-  const [extraImages, setExtraImages] = useState<FileList | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const list: AdminEvent[] = snapshot.docs.map((d) => {
+        const data = d.data() as any;
 
-  const isEvent =
-    kind === "concert" || kind === "sport" || kind === "performance";
+        return {
+          id: d.id,
+          eventId: data.id ?? data.eventId ?? "",
+          title: data.title ?? "",
+          subtitle: data.subtitle ?? "",
+          dateRange: data.dateRange ?? "",
+          time: data.Time ?? data.time ?? "",
+          venue: data.venue ?? "",
+          description: data.description ?? "",
+          bannerPath: data.banner ?? data.bannerPath ?? "",
+          stageImagePath: data.stageImage ?? data.stageImagePath ?? "",
+          category: (data.category as EventCategory) ?? "concert",
+          createdAt: data.createdAt,
+        };
+      });
 
-  const handleEventChange = (
-    field: keyof EventForm,
-    value: string | EventPrice[]
+      setEvents(list);
+      setLoadingEvents(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // จัดการเปลี่ยนค่าในฟอร์ม
+  const handleChange = (
+    e:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.ChangeEvent<HTMLTextAreaElement>
+      | React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setEventForm((prev) => ({
+    const { name, value } = e.target;
+    setForm((prev) => ({
       ...prev,
-      [field]: value,
+      [name]: value,
     }));
   };
 
-  const handleProductChange = (
-    field: keyof ProductForm,
-    value: string | ProductVariant[] | string[] | ("tshirt" | "Assessories")
+  // จัดการเปลี่ยนค่าโซนราคา
+  const handlePriceChange = (
+    index: number,
+    field: "name" | "price",
+    value: string
   ) => {
-    setProductForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setPrices((prev) =>
+      prev.map((p, i) =>
+        i === index
+          ? {
+              ...p,
+              [field]: value,
+            }
+          : p
+      )
+    );
   };
 
-  // ================== ใช้อันนี้แทน handleSubmit เดิม ==================
-  const handleSubmit = async (e: React.FormEvent) => {
+  const addPriceRow = () => {
+    setPrices((prev) => [...prev, { name: "", price: "0" }]);
+  };
+
+  const removePriceRow = (index: number) => {
+    setPrices((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // บันทึกฟอร์มเข้า Firestore
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setMessage(null);
+
+    if (!form.eventId.trim() || !form.title.trim()) {
+      alert("กรุณากรอก Event ID และชื่องาน");
+      return;
+    }
+
+    setSubmitting(true);
 
     try {
-      if (isEvent) {
-        if (!eventForm.id || !eventForm.title) {
-          setMessage("กรุณากรอก id และ title ของงานแสดง");
-          return;
-        }
+      const cleanPrices = prices
+        .filter((p) => p.name.trim() !== "")
+        .map((p) => ({
+          name: p.name.trim(),
+          price: Number(p.price) || 0,
+        }));
 
-        let bannerUrl = eventForm.bannerUrl;
-        let stageUrl = eventForm.stageImageUrl;
+      await addDoc(collection(db, "events"), {
+        // ให้ตรงกับ type Event ที่ใช้ฝั่งหน้าเว็บ
+        id: form.eventId.trim(),
+        title: form.title.trim(),
+        subtitle: form.subtitle.trim() || null,
+        banner: form.bannerPath.trim(),
+        dateRange: form.dateRange.trim(),
+        Time: form.time.trim(),
+        stageImage: form.stageImagePath.trim(),
+        venue: form.venue.trim(),
+        description: form.description.trim(),
+        prices: cleanPrices,
 
-        if (bannerFile) {
-          const bannerRef = ref(
-            storage,
-            `events/${eventForm.id}/banner_${bannerFile.name}`
-          );
-          console.log("[Admin] upload banner to", bannerRef.fullPath);
-          await uploadBytes(bannerRef, bannerFile);
-          bannerUrl = await getDownloadURL(bannerRef);
-        }
+        // เพิ่ม field เสริมสำหรับ admin
+        category: form.category,
+        createdAt: serverTimestamp(),
+      });
 
-        if (stageFile) {
-          const stageRef = ref(
-            storage,
-            `events/${eventForm.id}/stage_${stageFile.name}`
-          );
-          console.log("[Admin] upload stage image to", stageRef.fullPath);
-          await uploadBytes(stageRef, stageFile);
-          stageUrl = await getDownloadURL(stageRef);
-        }
-
-        await addDoc(collection(db, "events"), {
-          type: kind,
-          id: eventForm.id,
-          title: eventForm.title,
-          subtitle: eventForm.subtitle,
-          banner: bannerUrl,
-          stageImage: stageUrl,
-          dateRange: eventForm.dateRange,
-          Time: eventForm.time,
-          venue: eventForm.venue,
-          description: eventForm.description,
-          prices: eventForm.prices.filter((p) => p.name && p.price > 0),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        setMessage("บันทึกงานแสดงเรียบร้อย");
-      } else {
-        if (!productForm.id || !productForm.name) {
-          setMessage("กรุณากรอก id และชื่อสินค้า");
-          return;
-        }
-
-        let bannerUrl = productForm.bannerUrl;
-        const imageUrls: string[] = [];
-
-        if (bannerFile) {
-          const bannerRef = ref(
-            storage,
-            `products/${productForm.id}/banner_${bannerFile.name}`
-          );
-          console.log("[Admin] upload product banner to", bannerRef.fullPath);
-          await uploadBytes(bannerRef, bannerFile);
-          bannerUrl = await getDownloadURL(bannerRef);
-        }
-
-        if (extraImages && extraImages.length > 0) {
-          for (let i = 0; i < extraImages.length; i += 1) {
-            const file = extraImages[i];
-            const imgRef = ref(
-              storage,
-              `products/${productForm.id}/extra_${i}_${file.name}`
-            );
-            console.log("[Admin] upload extra image to", imgRef.fullPath);
-            await uploadBytes(imgRef, file);
-            const url = await getDownloadURL(imgRef);
-            imageUrls.push(url);
-          }
-        }
-
-        await addDoc(collection(db, "products"), {
-          id: productForm.id,
-          name: productForm.name,
-          subtitle: productForm.subtitle,
-          category: productForm.category,
-          description: productForm.description,
-          banner: bannerUrl,
-          images: imageUrls.length > 0 ? imageUrls : [bannerUrl],
-          details: productForm.details.filter((d) => d.trim() !== ""),
-          variants: productForm.variants.filter((v) => v.label && v.price > 0),
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        setMessage("บันทึกสินค้าเรียบร้อย");
-      }
-    } catch (err) {
-      console.error("[Admin] submit error", err);
-      const msg = err instanceof Error ? err.message : String(err);
-      setMessage("เกิดปัญหาในการบันทึกข้อมูล: " + msg);
+      setForm(initialForm);
+      setPrices(initialPrices);
+    } catch (error) {
+      console.log("[Admin] submit error", error);
+      alert("เกิดปัญหาในการบันทึกข้อมูล");
     } finally {
-      setSaving(false);
+      setSubmitting(false);
     }
   };
-  // =====================================================================
 
-  const resetForms = () => {
-    setEventForm({
-      id: "",
-      title: "",
-      subtitle: "",
-      dateRange: "",
-      time: "",
-      venue: "",
-      description: "",
-      bannerUrl: "",
-      stageImageUrl: "",
-      prices: [{ name: "", price: 0 }],
-    });
-    setProductForm({
-      id: "",
-      name: "",
-      subtitle: "",
-      category: "tshirt",
-      description: "",
-      bannerUrl: "",
-      images: [],
-      details: [""],
-      variants: [{ id: "small", label: "Small", price: 0 }],
-    });
-    setBannerFile(null);
-    setStageFile(null);
-    setExtraImages(null);
-    setMessage(null);
+  // ลบอีเวนต์จาก Firestore
+  const handleDelete = async (docId: string) => {
+    const ok = window.confirm("ต้องการลบอีเวนต์นี้ใช่ไหม");
+    if (!ok) return;
+
+    await deleteDoc(doc(db, "events", docId));
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <>
       <Header />
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Admin Panel</h1>
-            <p className="text-sm text-slate-600">
-              สร้าง Event และสินค้าใหม่เพื่อแสดงบนหน้าเว็บ
-            </p>
-          </div>
 
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <label className="text-sm font-medium">ประเภทที่ต้องการสร้าง</label>
-            <select
-              value={kind}
-              onChange={(e) => setKind(e.target.value as AdminKind)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            >
-              <option value="concert">Event: Concert</option>
-              <option value="sport">Event: Sport</option>
-              <option value="performance">Event: Performance Art</option>
-              <option value="product">Shop Product</option>
-            </select>
-          </div>
-        </div>
+      <main className="min-h-screen bg-[#f3f6fb]">
+        <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+          {/* ส่วนหัว Admin */}
+          <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold text-slate-900">
+                Admin Panel
+              </h1>
+              <p className="text-sm text-slate-600">
+                สร้าง Event และสินค้าขึ้นมาเพื่อแสดงบนหน้าเว็บ
+              </p>
+            </div>
 
-        {message && (
-          <div className="mb-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">
-            {message}
-          </div>
-        )}
+            <div className="w-full md:w-64">
+              <label className="block text-xs font-medium text-slate-600 mb-1">
+                ประเภทที่ต้องการสร้าง
+              </label>
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+              >
+                <option value="concert">Event: Concert</option>
+                <option value="sport">Event: Sport</option>
+                <option value="performance">Event: Performance</option>
+              </select>
+            </div>
+          </header>
 
-        <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.5fr)]">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-          >
-            {isEvent ? (
-              <>
-                <h2 className="text-lg font-semibold">ข้อมูลงานแสดง</h2>
+          {/* ฟอร์ม + note ด้านขวา */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2.3fr)_minmax(0,1.5fr)] gap-6">
+            {/* ซ้าย: ฟอร์ม (พยายามให้ layout ใกล้ของเดิม) */}
+            <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+              <h2 className="text-lg font-semibold mb-2">ข้อมูลงานแสดง</h2>
 
-                <div className="grid gap-4 md:grid-cols-2">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Event ID + ชื่อ */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       Event ID
                     </label>
                     <input
-                      value={eventForm.id}
-                      onChange={(e) => handleEventChange("id", e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      name="eventId"
+                      value={form.eventId}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="เช่น big-mountain-15"
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      ชื่องาน
+                      ชื่อวง / ชื่องาน
                     </label>
                     <input
-                      value={eventForm.title}
-                      onChange={(e) =>
-                        handleEventChange("title", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-1">
-                      คำโปรยสั้น
-                    </label>
-                    <input
-                      value={eventForm.subtitle}
-                      onChange={(e) =>
-                        handleEventChange("subtitle", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      name="title"
+                      value={form.title}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                {/* คำโปรยสั้น */}
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    คำโปรยสั้น
+                  </label>
+                  <input
+                    name="subtitle"
+                    value={form.subtitle}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                  />
+                </div>
+
+                {/* วัน เวลา สถานที่ */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       ช่วงวันจัดงาน
                     </label>
                     <input
-                      value={eventForm.dateRange}
-                      onChange={(e) =>
-                        handleEventChange("dateRange", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      name="dateRange"
+                      value={form.dateRange}
+                      onChange={handleChange}
+                      placeholder="เช่น 6–7 December 2025"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       เวลา
                     </label>
                     <input
-                      value={eventForm.time}
-                      onChange={(e) =>
-                        handleEventChange("time", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      name="time"
+                      value={form.time}
+                      onChange={handleChange}
+                      placeholder="เช่น 19:00"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1">
                       สถานที่จัดงาน
                     </label>
                     <input
-                      value={eventForm.venue}
-                      onChange={(e) =>
-                        handleEventChange("venue", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                      name="venue"
+                      value={form.venue}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
+                {/* รายละเอียด */}
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     รายละเอียด
                   </label>
                   <textarea
-                    value={eventForm.description}
-                    onChange={(e) =>
-                      handleEventChange("description", e.target.value)
-                    }
-                    rows={4}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    rows={5}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 resize-none"
                   />
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                {/* Banner / Stage (ใช้ path หรือ URL แทน file upload จริง) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      Banner
+                      Banner path หรือ URL
                     </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setBannerFile(e.target.files ? e.target.files[0] : null)
-                      }
-                      className="w-full text-sm"
+                      name="bannerPath"
+                      value={form.bannerPath}
+                      onChange={handleChange}
+                      placeholder="/banners/concert/Bigmountain.jpg"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-1">
-                      ผังที่นั่ง (Stage Image)
+                      ผังที่นั่ง (Stage Image) path หรือ URL
                     </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setStageFile(e.target.files ? e.target.files[0] : null)
-                      }
-                      className="w-full text-sm"
+                      name="stageImagePath"
+                      value={form.stageImagePath}
+                      onChange={handleChange}
+                      placeholder="/banners/stage/BMMF_ticket.jpg"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
+                {/* ราคาบัตรแต่ละโซน */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">
                     ราคาบัตรแต่ละโซน
                   </label>
-                  <div className="space-y-2">
-                    {eventForm.prices.map((p, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          placeholder="ชื่อโซน"
-                          value={p.name}
-                          onChange={(e) => {
-                            const list = [...eventForm.prices];
-                            list[index] = {
-                              ...list[index],
-                              name: e.target.value,
-                            };
-                            handleEventChange("prices", list);
-                          }}
-                          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <input
-                          type="number"
-                          placeholder="ราคา"
-                          value={p.price}
-                          onChange={(e) => {
-                            const list = [...eventForm.prices];
-                            list[index] = {
-                              ...list[index],
-                              price: Number(e.target.value) || 0,
-                            };
-                            handleEventChange("prices", list);
-                          }}
-                          className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const list = [...eventForm.prices];
-                            list.splice(index, 1);
-                            handleEventChange("prices", list);
-                          }}
-                          className="text-xs text-red-600"
-                        >
-                          ลบ
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleEventChange("prices", [
-                          ...eventForm.prices,
-                          { name: "", price: 0 },
-                        ])
-                      }
-                      className="text-xs text-[#234C6A]"
+
+                  {prices.map((p, index) => (
+                    <div
+                      key={index}
+                      className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto] gap-3 items-center"
                     >
-                      เพิ่มโซน
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="text-lg font-semibold">ข้อมูลสินค้า Shop</h2>
+                      <input
+                        placeholder="ชื่อโซน"
+                        value={p.name}
+                        onChange={(e) =>
+                          handlePriceChange(index, "name", e.target.value)
+                        }
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                      <input
+                        type="number"
+                        placeholder="ราคา"
+                        value={p.price}
+                        onChange={(e) =>
+                          handlePriceChange(index, "price", e.target.value)
+                        }
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePriceRow(index)}
+                        className="text-xs text-red-600 hover:underline"
+                      >
+                        ลบ
+                      </button>
+                    </div>
+                  ))}
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Product ID
-                    </label>
-                    <input
-                      value={productForm.id}
-                      onChange={(e) =>
-                        handleProductChange("id", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      ชื่อสินค้า
-                    </label>
-                    <input
-                      value={productForm.name}
-                      onChange={(e) =>
-                        handleProductChange("name", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium mb-1">
-                      คำโปรยสั้น
-                    </label>
-                    <input
-                      value={productForm.subtitle}
-                      onChange={(e) =>
-                        handleProductChange("subtitle", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={addPriceRow}
+                    className="mt-1 text-xs text-sky-700 font-medium hover:underline"
+                  >
+                    เพิ่มโซน
+                  </button>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      หมวดหมู่
-                    </label>
-                    <select
-                      value={productForm.category}
-                      onChange={(e) =>
-                        handleProductChange(
-                          "category",
-                          e.target.value as "tshirt" | "Assessories"
-                        )
-                      }
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                    >
-                      <option value="tshirt">T-Shirt</option>
-                      <option value="Assessories">Accessories</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Banner
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) =>
-                        setBannerFile(e.target.files ? e.target.files[0] : null)
-                      }
-                      className="w-full text-sm"
-                    />
-                  </div>
-                </div>
+                {/* ปุ่มบันทึก / เคลียร์ฟอร์ม */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="px-5 py-2 rounded-lg bg-sky-700 text-white text-sm font-medium hover:bg-sky-800 disabled:opacity-60"
+                  >
+                    {submitting ? "กำลังบันทึก..." : "บันทึก"}
+                  </button>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    รูปภาพเพิ่มเติม
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => setExtraImages(e.target.files)}
-                    className="w-full text-sm"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForm(initialForm);
+                      setPrices(initialPrices);
+                    }}
+                    className="px-4 py-2 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                  >
+                    ล้างฟอร์ม
+                  </button>
                 </div>
+              </form>
+            </section>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    รายละเอียดสินค้า
-                  </label>
-                  <textarea
-                    value={productForm.description}
-                    onChange={(e) =>
-                      handleProductChange("description", e.target.value)
-                    }
-                    rows={4}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    จุดเด่น / รายละเอียดเพิ่มเติม
-                  </label>
-                  <div className="space-y-2">
-                    {productForm.details.map((d, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          value={d}
-                          onChange={(e) => {
-                            const list = [...productForm.details];
-                            list[index] = e.target.value;
-                            handleProductChange("details", list);
-                          }}
-                          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const list = [...productForm.details];
-                            list.splice(index, 1);
-                            handleProductChange("details", list);
-                          }}
-                          className="text-xs text-red-600"
-                        >
-                          ลบ
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleProductChange("details", [
-                          ...productForm.details,
-                          "",
-                        ])
-                      }
-                      className="text-xs text-[#234C6A]"
-                    >
-                      เพิ่มรายการ
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    ตัวเลือกสินค้า (เช่น Size)
-                  </label>
-                  <div className="space-y-2">
-                    {productForm.variants.map((v, index) => (
-                      <div key={index} className="flex gap-2 items-center">
-                        <input
-                          placeholder="รหัสเช่น small"
-                          value={v.id}
-                          onChange={(e) => {
-                            const list = [...productForm.variants];
-                            list[index] = {
-                              ...list[index],
-                              id: e.target.value,
-                            };
-                            handleProductChange("variants", list);
-                          }}
-                          className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <input
-                          placeholder="ชื่อเช่น Small"
-                          value={v.label}
-                          onChange={(e) => {
-                            const list = [...productForm.variants];
-                            list[index] = {
-                              ...list[index],
-                              label: e.target.value,
-                            };
-                            handleProductChange("variants", list);
-                          }}
-                          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <input
-                          type="number"
-                          placeholder="ราคา"
-                          value={v.price}
-                          onChange={(e) => {
-                            const list = [...productForm.variants];
-                            list[index] = {
-                              ...list[index],
-                              price: Number(e.target.value) || 0,
-                            };
-                            handleProductChange("variants", list);
-                          }}
-                          className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const list = [...productForm.variants];
-                            list.splice(index, 1);
-                            handleProductChange("variants", list);
-                          }}
-                          className="text-xs text-red-600"
-                        >
-                          ลบ
-                        </button>
-                      </div>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        handleProductChange("variants", [
-                          ...productForm.variants,
-                          { id: "", label: "", price: 0 },
-                        ])
-                      }
-                      className="text-xs text-[#234C6A]"
-                    >
-                      เพิ่มตัวเลือก
-                    </button>
-                  </div>
-                </div>
-              </>
-            )}
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="rounded-lg bg-[#234C6A] px-4 py-2 text-sm font-semibold text-white disabled:bg-slate-400"
-              >
-                {saving ? "กำลังบันทึก..." : "บันทึก"}
-              </button>
-              <button
-                type="button"
-                onClick={resetForms}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700"
-              >
-                ล้างฟอร์ม
-              </button>
-            </div>
-          </form>
-
-          <div className="space-y-4">
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
-              <h2 className="mb-2 text-sm font-semibold text-slate-900">
-                Preview การ์ด
-              </h2>
-              {isEvent ? (
-                <div className="rounded-xl border border-slate-200 p-3 text-sm">
-                  <p className="font-semibold">
-                    {eventForm.title || "ชื่องานแสดง"}
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    {eventForm.subtitle || "คำโปรยสั้น"}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {eventForm.dateRange || "วันเวลา"} {eventForm.time && " | "}
-                    {eventForm.time}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {eventForm.venue || "สถานที่จัดงาน"}
-                  </p>
-                </div>
-              ) : (
-                <div className="rounded-xl border border-slate-200 p-3 text-sm">
-                  <p className="font-semibold">
-                    {productForm.name || "ชื่อสินค้า"}
-                  </p>
-                  <p className="text-xs text-slate-600">
-                    {productForm.subtitle || "คำโปรยสั้น"}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {productForm.category === "tshirt"
-                      ? "หมวดหมู่: T-Shirt"
-                      : "หมวดหมู่: Accessories"}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 text-xs text-slate-600">
-              <p className="font-semibold mb-1">หมายเหตุการใช้งาน</p>
-              <ul className="list-disc pl-4 space-y-1">
-                <li>
-                  Event จะถูกบันทึกใน collection
-                  <span className="font-mono"> events</span>
-                </li>
-                <li>
-                  สินค้า Shop จะถูกบันทึกใน collection
-                  <span className="font-mono"> products</span>
-                </li>
-                <li>รูปภาพทั้งหมดเก็บใน Firebase Storage ตาม path ของ id</li>
-              </ul>
-            </div>
+            {/* ขวา: note / preview card */}
+            <section className="space-y-4">
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 text-sm text-slate-700 space-y-1">
+                <h2 className="text-base font-semibold mb-1">
+                  หมายเหตุการใช้งาน
+                </h2>
+                <p>
+                  • Event จะถูกเก็บที่ collection{" "}
+                  <span className="font-mono">events</span>
+                </p>
+                <p>
+                  • สินค้า Shop จะถูกเก็บที่ collection{" "}
+                  <span className="font-mono">products</span>
+                </p>
+                <p>
+                  • รูปภาพทั้งหมดใช้ path จาก public หรือจาก Firebase Storage
+                  ตามที่กำหนด
+                </p>
+              </div>
+            </section>
           </div>
+
+          {/* รายการอีเวนต์ทั้งหมด + ปุ่มลบ */}
+          <section className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">รายการอีเวนต์ทั้งหมด</h2>
+              <span className="text-xs text-slate-500">
+                ทั้งหมด {events.length} รายการ
+              </span>
+            </div>
+
+            {loadingEvents ? (
+              <div className="text-sm text-slate-600">กำลังโหลดข้อมูล...</div>
+            ) : events.length === 0 ? (
+              <div className="text-sm text-slate-600">
+                ยังไม่มีอีเวนต์ในระบบ
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2">
+                {events.map((ev) => (
+                  <AdminEventCard
+                    key={ev.id}
+                    event={ev}
+                    onDelete={() => handleDelete(ev.id)}
+                  />
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </main>
+
       <Footer />
-    </div>
+    </>
   );
 }
