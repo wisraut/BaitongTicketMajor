@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-import { useUserAuth } from "../context/UserAuthContext";
-import { db } from "../components/base/firebase";
+import { useUserAuth } from "../components/auth/UserAuthContext";
+import { db } from "../components/auth/firebase";
 
 type RequireAdminProps = {
   children: JSX.Element;
