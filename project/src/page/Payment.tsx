@@ -3,6 +3,8 @@ import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
 import generatePayload from "promptpay-qr";
 import QRCode from "qrcode";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
 
 type CartItem = {
   id: string;
@@ -30,6 +32,7 @@ type OrderHistory = {
     phone: string;
     address: string;
   };
+  qrImage?: string;
 };
 
 export default function Payment() {
@@ -43,8 +46,9 @@ export default function Payment() {
   const [address, setAddress] = useState<string>("");
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const promptPayNumber = "0812345678";
+  const promptPayNumber = "0837951132";
 
   useEffect(() => {
     try {
@@ -81,6 +85,7 @@ export default function Payment() {
 
   const handlePayment = async (): Promise<void> => {
     if (!validateForm()) return;
+    if (cartItems.length === 0) return;
 
     try {
       const payload = generatePayload(promptPayNumber, {
@@ -95,48 +100,49 @@ export default function Payment() {
     }
   };
 
-  const handleConfirmPaid = (): void => {
+  const handleConfirmPaid = async (): Promise<void> => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+
     try {
       const newOrder: OrderHistory = {
         id: Date.now().toString(),
         date: new Date().toLocaleString(),
         items: cartItems,
         total: totalPrice,
-        customer: {
-          name,
-          email,
-          phone,
-          address,
-        },
+        customer: { name, email, phone, address },
+        qrImage: qrImage,
       };
 
-      const oldHistory = localStorage.getItem("orderHistory");
+      await addDoc(collection(db, "orders"), {
+        ...newOrder,
+        createdAt: serverTimestamp(),
+      });
 
+      const oldHistory = localStorage.getItem("orderHistory");
       let parsedHistory: OrderHistory[] = [];
 
       if (oldHistory) {
         try {
           const parsed = JSON.parse(oldHistory);
-          if (Array.isArray(parsed)) {
-            parsedHistory = parsed;
-          }
+          if (Array.isArray(parsed)) parsedHistory = parsed;
         } catch {
           parsedHistory = [];
         }
       }
 
       parsedHistory.push(newOrder);
-
       localStorage.setItem("orderHistory", JSON.stringify(parsedHistory));
 
       localStorage.removeItem("cartItems");
 
       setShowQR(false);
 
-      // reload กลับหน้า Home กันพัง
       window.location.href = "/";
     } catch (error) {
       console.error("Payment save error:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -148,7 +154,6 @@ export default function Payment() {
         <h1 className="text-2xl font-bold mb-6">ชำระเงิน</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* ฟอร์ม */}
           <div className="md:col-span-2 bg-white rounded-2xl shadow p-6">
             <h2 className="font-semibold mb-4">ข้อมูลผู้ซื้อ</h2>
 
@@ -205,6 +210,7 @@ export default function Payment() {
               </div>
 
               <button
+                type="button"
                 onClick={handlePayment}
                 className="mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white bg-[#234C6A] hover:bg-[#1d3e56]"
               >
@@ -213,14 +219,11 @@ export default function Payment() {
             </div>
           </div>
 
-          {/* สรุปรายการ */}
           <div className="bg-white rounded-2xl shadow p-6">
             <h2 className="font-semibold mb-4">สรุปรายการ</h2>
 
             {cartItems.length === 0 && (
-              <p className="text-gray-500 text-sm">
-                ไม่มีสินค้าในตะกร้า
-              </p>
+              <p className="text-gray-500 text-sm">ไม่มีสินค้าในตะกร้า</p>
             )}
 
             {cartItems.map((item) => (
@@ -247,10 +250,9 @@ export default function Payment() {
 
       <Footer />
 
-      {/* Popup QR */}
       {showQR && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl relative z-[10000]">
             <h2 className="text-lg font-semibold text-center mb-2">
               ยอดชำระทั้งหมด
             </h2>
@@ -276,6 +278,7 @@ export default function Payment() {
 
             <div className="mt-6 flex justify-center gap-3">
               <button
+                type="button"
                 onClick={() => setShowQR(false)}
                 className="px-4 py-2 border rounded-lg"
               >
@@ -283,8 +286,10 @@ export default function Payment() {
               </button>
 
               <button
+                type="button"
+                disabled={isProcessing}
                 onClick={handleConfirmPaid}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg disabled:opacity-50"
               >
                 ฉันชำระแล้ว
               </button>

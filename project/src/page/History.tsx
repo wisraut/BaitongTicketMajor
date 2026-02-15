@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
+import { db } from "../firebase";
 
 type OrderHistory = {
   id: string;
@@ -18,31 +20,62 @@ type OrderHistory = {
     phone: string;
     address: string;
   };
+  qrImage?: string; // 🔥 รองรับ QR
 };
 
 export default function History() {
   const [orders, setOrders] = useState<OrderHistory[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("orderHistory");
+    const fetchOrders = async () => {
+      try {
+        // 🔥 ดึงจาก Firestore ก่อน
+        const q = query(
+          collection(db, "orders"),
+          orderBy("createdAt", "desc")
+        );
 
-      if (!raw) {
+        const snapshot = await getDocs(q);
+
+        if (!snapshot.empty) {
+          const firestoreOrders: OrderHistory[] = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: data.id ?? doc.id,
+              date: data.date ?? "-",
+              items: data.items ?? [],
+              total: data.total ?? 0,
+              customer: data.customer ?? {},
+              qrImage: data.qrImage ?? "",
+            };
+          });
+
+          setOrders(firestoreOrders);
+          return;
+        }
+
+        // 🔥 ถ้า Firestore ยังไม่มี ใช้ localStorage ต่อ
+        const raw = localStorage.getItem("orderHistory");
+
+        if (!raw) {
+          setOrders([]);
+          return;
+        }
+
+        const parsed = JSON.parse(raw);
+
+        if (Array.isArray(parsed)) {
+          setOrders(parsed);
+        } else {
+          setOrders([]);
+        }
+      } catch (error) {
+        console.error("History error:", error);
         setOrders([]);
-        return;
       }
+    };
 
-      const parsed = JSON.parse(raw);
-
-      if (Array.isArray(parsed)) {
-        setOrders(parsed);
-      } else {
-        setOrders([]);
-      }
-    } catch (error) {
-      console.error("History error:", error);
-      setOrders([]);
-    }
+    fetchOrders();
   }, []);
 
   return (
@@ -109,6 +142,20 @@ export default function History() {
                 <p><strong>เบอร์:</strong> {order.customer?.phone ?? "-"}</p>
                 <p><strong>ที่อยู่:</strong> {order.customer?.address ?? "-"}</p>
               </div>
+
+              {/* 🔥 เพิ่มแสดง QR แบบไม่ยุ่ง style เดิม */}
+              {order.qrImage && (
+                <div className="border-t mt-4 pt-4 text-center">
+                  <p className="text-sm font-semibold mb-2">
+                    หลักฐานการชำระเงิน
+                  </p>
+                  <img
+                    src={order.qrImage}
+                    alt="QR Payment"
+                    className="mx-auto w-40 h-40"
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
