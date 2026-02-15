@@ -153,10 +153,9 @@ export default function EventDetail() {
 
   // ตั้งค่า default tier เมื่อได้ event ใหม่
   useEffect(() => {
-    if (event?.prices && event.prices.length > 0) {
-      setSelectedTierName(event.prices[0].name);
-    }
-  }, [event]);
+  setSelectedTierName(""); // ให้เริ่มเป็นค่าว่างเสมอ
+}, [event]);
+
 
   if (loading) {
     return (
@@ -307,20 +306,32 @@ export default function EventDetail() {
                         value={selectedTierName}
                         onValueChange={setSelectedTierName}
                       >
-                        <Select.Trigger className="mt-1 w-full bg-slate-800 text-white px-4 py-2 rounded-md text-left text-sm">
+                        <Select.Trigger className="mt-1 w-full bg-slate-800 text-white px-4 py-2 rounded-md text-left text-sm flex items-center justify-between">
                           <Select.Value placeholder="เลือกประเภทบัตร" />
+                          <Select.Icon>▼</Select.Icon>
                         </Select.Trigger>
+
                         <Select.Portal>
-                          <Select.Content className="bg-slate-800 text-white rounded-md shadow-lg">
-                            {prices.map((p) => (
-                              <Select.Item
-                                key={p.name}
-                                value={p.name}
-                                className="px-4 py-2 cursor-pointer hover:bg-slate-700 text-sm"
-                              >
-                                {p.name} - {p.price.toLocaleString()} บาท
-                              </Select.Item>
-                            ))}
+                          <Select.Content
+                            position="popper"
+                            className="bg-slate-800 text-white rounded-md shadow-lg z-50"
+                          >
+                            <Select.Viewport className="p-1">
+                              {prices.map((p) => (
+                                <Select.Item
+                                  key={p.name}
+                                  value={p.name}
+                                  className="px-4 py-2 cursor-pointer hover:bg-slate-700 rounded text-sm outline-none"
+                                >
+                                  <Select.ItemText>
+                                    {p.name} - {p.price.toLocaleString()} บาท
+                                  </Select.ItemText>
+                                  <Select.ItemIndicator className="absolute right-3">
+                                    ✓
+                                  </Select.ItemIndicator>
+                                </Select.Item>
+                              ))}
+                            </Select.Viewport>
                           </Select.Content>
                         </Select.Portal>
                       </Select.Root>

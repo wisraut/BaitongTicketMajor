@@ -1,262 +1,297 @@
-// src/page/Payment.tsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import generatePayload from "promptpay-qr";
+import QRCode from "qrcode";
 
 type CartItem = {
   id: string;
-  type: "event" | "product";
   title: string;
-  image: string;
-  option?: string;
   unitPrice: number;
   quantity: number;
-  eventdate?: string;
-  eventlocation?: string;
-  eventtime?: string;
+  option?: string;
 };
 
-type OrderHistoryItem = {
-  id: string;
-  email: string;
-  type: "event" | "product" | "mixed";
-  items: CartItem[];
-  totalAmount: number;
-  createdAt: string;
-  buyerName?: string;
-  contactEmail?: string;
-  phone?: string;
-  paymentMethod?: string;
-};
-
-type LoggedInUser = {
+type FormErrors = {
   name?: string;
   email?: string;
-  uid?: string;
+  phone?: string;
+  address?: string;
 };
 
-const HISTORY_KEY = "orderHistory";
+type OrderHistory = {
+  id: string;
+  date: string;
+  items: CartItem[];
+  total: number;
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+  };
+};
 
-export default function PaymentPage() {
-  const navigate = useNavigate();
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [note, setNote] = useState("");
+export default function Payment() {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [showQR, setShowQR] = useState<boolean>(false);
+  const [qrImage, setQrImage] = useState<string>("");
 
-  // โหลดตะกร้า
+  const [name, setName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [address, setAddress] = useState<string>("");
+
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const promptPayNumber = "0812345678";
+
   useEffect(() => {
-    const raw = localStorage.getItem("cartItems");
-    if (!raw) return;
     try {
+      const raw = localStorage.getItem("cartItems");
+      if (!raw) return;
+
       const parsed = JSON.parse(raw);
+
       if (Array.isArray(parsed)) {
-        setItems(parsed);
+        setCartItems(parsed);
       }
-    } catch {
-      setItems([]);
+    } catch (error) {
+      console.error("Cart parse error:", error);
     }
   }, []);
 
-  const total = items.reduce((sum, it) => sum + it.unitPrice * it.quantity, 0);
+  const totalPrice: number = cartItems.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0
+  );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
-    if (items.length === 0) {
-      alert("ยังไม่มีรายการในตะกร้า");
-      return;
-    }
-    if (!name || !email || !phone) {
-      alert("กรุณากรอกชื่อ อีเมล และเบอร์โทรให้ครบ");
-      return;
-    }
+    if (!name.trim()) newErrors.name = "กรุณากรอกชื่อ";
+    if (!email.includes("@")) newErrors.email = "Email ต้องมี @";
+    if (!/^\d{10}$/.test(phone)) newErrors.phone = "เบอร์โทรต้องมี 10 หลัก";
+    if (!address.trim()) newErrors.address = "กรุณากรอกที่อยู่";
 
-    // อ่านข้อมูล user ที่ล็อกอิน (ถ้ามี)
-    let loggedEmail = "";
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePayment = async (): Promise<void> => {
+    if (!validateForm()) return;
+
     try {
-      const rawUser = localStorage.getItem("loggedInUser");
-      if (rawUser) {
-        const parsed = JSON.parse(rawUser) as LoggedInUser;
-        if (parsed.email) loggedEmail = parsed.email.toLowerCase();
+      const payload = generatePayload(promptPayNumber, {
+        amount: totalPrice,
+      });
+
+      const qr = await QRCode.toDataURL(payload);
+      setQrImage(qr);
+      setShowQR(true);
+    } catch (error) {
+      console.error("QR error:", error);
+    }
+  };
+
+  const handleConfirmPaid = (): void => {
+    try {
+      const newOrder: OrderHistory = {
+        id: Date.now().toString(),
+        date: new Date().toLocaleString(),
+        items: cartItems,
+        total: totalPrice,
+        customer: {
+          name,
+          email,
+          phone,
+          address,
+        },
+      };
+
+      const oldHistory = localStorage.getItem("orderHistory");
+
+      let parsedHistory: OrderHistory[] = [];
+
+      if (oldHistory) {
+        try {
+          const parsed = JSON.parse(oldHistory);
+          if (Array.isArray(parsed)) {
+            parsedHistory = parsed;
+          }
+        } catch {
+          parsedHistory = [];
+        }
       }
-    } catch {
-      loggedEmail = "";
+
+      parsedHistory.push(newOrder);
+
+      localStorage.setItem("orderHistory", JSON.stringify(parsedHistory));
+
+      localStorage.removeItem("cartItems");
+
+      setShowQR(false);
+
+      // reload กลับหน้า Home กันพัง
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Payment save error:", error);
     }
-
-    // หา type ของออเดอร์ (event / product / mixed)
-    const types = new Set(items.map((i) => i.type));
-    let orderType: OrderHistoryItem["type"];
-    if (types.size === 1) {
-      orderType = types.has("event") ? "event" : "product";
-    } else {
-      orderType = "mixed";
-    }
-
-    const now = new Date();
-
-    const newOrder: OrderHistoryItem = {
-      id: `ORD-${now.getTime()}`, // ไอดีออเดอร์ง่ายๆ จาก timestamp
-      email: (loggedEmail || email).toLowerCase(),
-      type: orderType,
-      items,
-      totalAmount: total,
-      createdAt: now.toISOString(),
-      buyerName: name,
-      contactEmail: email,
-      phone,
-      paymentMethod: "QR Payment",
-    };
-
-    // ดึง history เดิมจาก localStorage
-    let history: OrderHistoryItem[] = [];
-    const rawHistory = localStorage.getItem(HISTORY_KEY);
-    if (rawHistory) {
-      try {
-        const parsed = JSON.parse(rawHistory);
-        if (Array.isArray(parsed)) history = parsed;
-      } catch {
-        history = [];
-      }
-    }
-
-    history.push(newOrder);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-
-    alert("ชำระเงินสำเร็จ ขอบคุณที่ใช้บริการ BaiTongTicket");
-
-    // เคลียร์ตะกร้า แล้วไปหน้า history
-    localStorage.removeItem("cartItems");
-    navigate("/history");
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#F5F7FA]">
       <Header />
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">ชำระเงิน</h1>
+      <div className="max-w-6xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold mb-6">ชำระเงิน</h1>
 
-        {items.length === 0 ? (
-          <p className="text-sm text-slate-600">
-            ยังไม่มีรายการในตะกร้า กรุณาเลือกงานแสดงหรือสินค้าเพิ่มลงตะกร้าก่อน
-          </p>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1.3fr)]">
-            {/* ฟอร์มข้อมูลผู้ซื้อ */}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200"
-            >
-              <h2 className="text-sm font-semibold text-slate-900 mb-2">
-                ข้อมูลผู้ซื้อ
-              </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* ฟอร์ม */}
+          <div className="md:col-span-2 bg-white rounded-2xl shadow p-6">
+            <h2 className="font-semibold mb-4">ข้อมูลผู้ซื้อ</h2>
 
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs font-medium mb-1">
-                  ชื่อ-นามสกุล
-                </label>
                 <input
+                  type="text"
+                  placeholder="ชื่อ-นามสกุล"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                  className="w-full border rounded-lg px-3 py-2"
                 />
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div>
-                  <label className="block text-xs font-medium mb-1">
-                    อีเมล
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium mb-1">
-                    เบอร์โทรศัพท์
-                  </label>
-                  <input
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-                  />
-                </div>
+                {errors.name && (
+                  <p className="text-red-500 text-sm">{errors.name}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1">
-                  หมายเหตุ (ไม่บังคับ)
-                </label>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
                 />
+                {errors.email && (
+                  <p className="text-red-500 text-sm">{errors.email}</p>
+                )}
+              </div>
+
+              <div>
+                <input
+                  type="text"
+                  placeholder="เบอร์โทร"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+                {errors.phone && (
+                  <p className="text-red-500 text-sm">{errors.phone}</p>
+                )}
+              </div>
+
+              <div>
+                <textarea
+                  placeholder="ที่อยู่จัดส่ง"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+                {errors.address && (
+                  <p className="text-red-500 text-sm">{errors.address}</p>
+                )}
               </div>
 
               <button
-                type="submit"
-                className="mt-2 inline-flex items-center justify-center rounded-full bg-[#234C6A] px-6 py-2.5 text-sm font-semibold text-white"
+                onClick={handlePayment}
+                className="mt-4 rounded-full px-6 py-2.5 text-sm font-semibold text-white bg-[#234C6A] hover:bg-[#1d3e56]"
               >
                 ยืนยันการชำระเงิน
               </button>
-            </form>
-
-            {/* สรุปรายการ + QR */}
-            <aside className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
-              <h2 className="text-sm font-semibold text-slate-900">
-                สรุปรายการ
-              </h2>
-
-              <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                {items.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between text-xs text-slate-700"
-                  >
-                    <div>
-                      <p className="font-semibold">{item.title}</p>
-                      {item.option && (
-                        <p className="text-slate-500">
-                          ตัวเลือก: {item.option}
-                        </p>
-                      )}
-                      <p className="text-slate-500">x{item.quantity} ชิ้น</p>
-                    </div>
-                    <p className="font-semibold">
-                      {(item.unitPrice * item.quantity).toLocaleString()} บาท
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <hr className="my-2" />
-
-              <div className="flex justify-between text-sm font-semibold text-slate-900">
-                <span>ยอดรวมทั้งหมด</span>
-                <span>{total.toLocaleString()} บาท</span>
-              </div>
-
-              <div className="mt-6 flex justify-center">
-                <img
-                  src="/qrcode.jpg"
-                  alt="QR Code สำหรับชำระเงิน"
-                  className="w-64 h-64 object-contain"
-                />
-              </div>
-            </aside>
+            </div>
           </div>
-        )}
-      </main>
+
+          {/* สรุปรายการ */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="font-semibold mb-4">สรุปรายการ</h2>
+
+            {cartItems.length === 0 && (
+              <p className="text-gray-500 text-sm">
+                ไม่มีสินค้าในตะกร้า
+              </p>
+            )}
+
+            {cartItems.map((item) => (
+              <div key={item.id} className="flex justify-between text-sm mb-3">
+                <div>
+                  <p>{item.title}</p>
+                  <p className="text-xs text-gray-500">
+                    x{item.quantity}
+                  </p>
+                </div>
+                <p>
+                  {(item.unitPrice * item.quantity).toLocaleString()} บาท
+                </p>
+              </div>
+            ))}
+
+            <div className="border-t pt-4 mt-4 flex justify-between font-semibold">
+              <span>ยอดรวมทั้งหมด</span>
+              <span>{totalPrice.toLocaleString()} บาท</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <Footer />
+
+      {/* Popup QR */}
+      {showQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
+            <h2 className="text-lg font-semibold text-center mb-2">
+              ยอดชำระทั้งหมด
+            </h2>
+
+            <p className="text-2xl font-bold text-center mb-4">
+              {totalPrice.toLocaleString()} บาท
+            </p>
+
+            <div className="text-sm mb-4 space-y-1">
+              <p><strong>ชื่อ:</strong> {name}</p>
+              <p><strong>Email:</strong> {email}</p>
+              <p><strong>เบอร์:</strong> {phone}</p>
+              <p><strong>ที่อยู่:</strong> {address}</p>
+            </div>
+
+            {qrImage && (
+              <img
+                src={qrImage}
+                alt="PromptPay QR"
+                className="mx-auto w-56 h-56"
+              />
+            )}
+
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={() => setShowQR(false)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                onClick={handleConfirmPaid}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg"
+              >
+                ฉันชำระแล้ว
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
