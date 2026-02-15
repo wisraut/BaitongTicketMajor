@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { collection, getDocs, limit, query, where } from "firebase/firestore";
+import * as Select from "@radix-ui/react-select";
 import { db } from "../firebase";
 
 import { EVENTS as CONCERT_EVENTS } from "../data/eventconcert";
@@ -50,6 +51,9 @@ type CartItem = {
   option?: string; // ชื่อโซน / size
   unitPrice: number;
   quantity: number;
+  eventdate?: string;
+  eventlocation?: string;
+  eventtime?: string;
 };
 
 export default function EventDetail() {
@@ -60,6 +64,9 @@ export default function EventDetail() {
   const [event, setEvent] = useState<AnyEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  const [selectedTierName, setSelectedTierName] = useState<string>("");
+  const [ticketQty, setTicketQty] = useState<number>(1);
 
   // ดึง user จาก localStorage
   useEffect(() => {
@@ -99,8 +106,19 @@ export default function EventDetail() {
         if (snap.empty) {
           setEvent(null);
         } else {
-          const doc = snap.docs[0];
-          const data = doc.data() as any;
+          const docSnap = snap.docs[0];
+          const data = docSnap.data() as {
+            id?: string;
+            title?: string;
+            subtitle?: string;
+            banner?: string;
+            dateRange?: string;
+            Time?: string;
+            stageImage?: string;
+            venue?: string;
+            description?: string;
+            prices?: { name?: string; price?: number }[];
+          };
 
           const fromDb: AnyEvent = {
             id: data.id ?? id,
@@ -113,7 +131,7 @@ export default function EventDetail() {
             stageImage: data.stageImage ?? "",
             description: data.description ?? "",
             prices: Array.isArray(data.prices)
-              ? data.prices.map((p: any) => ({
+              ? data.prices.map((p): PriceTier => ({
                   name: String(p.name ?? ""),
                   price: Number(p.price ?? 0),
                 }))
@@ -133,6 +151,13 @@ export default function EventDetail() {
     fetchFromFirestore();
   }, [id]);
 
+  // ตั้งค่า default tier เมื่อได้ event ใหม่
+  useEffect(() => {
+    if (event?.prices && event.prices.length > 0) {
+      setSelectedTierName(event.prices[0].name);
+    }
+  }, [event]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -151,6 +176,8 @@ export default function EventDetail() {
 
   const prices = event.prices ?? [];
   const defaultTier = prices.length > 0 ? prices[0] : undefined;
+  const selectedTier =
+    prices.find((p) => p.name === selectedTierName) ?? defaultTier;
 
   // อ่าน cart ปัจจุบันจาก localStorage
   function readCart(): CartItem[] {
@@ -169,17 +196,25 @@ export default function EventDetail() {
     localStorage.setItem("cartItems", JSON.stringify(items));
   }
 
-  function buildDefaultCartItem(): CartItem {
+  function buildCartItem(): CartItem {
+    if (!event) {
+      throw new Error("Event not loaded");
+    }
+
+    const tier = selectedTier;
+    const safeQty = Math.max(1, ticketQty || 1);
+
     return {
-      id: defaultTier
-        ? `${event.id}:${defaultTier.name}`
-        : `${event.id}:default`,
+      id: tier ? `${event.id}:${tier.name}` : `${event.id}:default`,
       type: "event",
       title: event.title,
       image: event.banner,
-      option: defaultTier?.name,
-      unitPrice: defaultTier?.price ?? 0,
-      quantity: 1,
+      option: tier?.name,
+      unitPrice: tier?.price ?? 0,
+      quantity: safeQty,
+      eventdate: event.dateRange,
+      eventlocation: event.venue,
+      eventtime: event.Time,
     };
   }
 
@@ -194,7 +229,7 @@ export default function EventDetail() {
   const handleAddToCart = () => {
     requireLogin(() => {
       const items = readCart();
-      items.push(buildDefaultCartItem());
+      items.push(buildCartItem());
       writeCart(items);
       navigate("/cart");
     });
@@ -203,7 +238,7 @@ export default function EventDetail() {
   const handleGoPayment = () => {
     requireLogin(() => {
       const items = readCart();
-      items.push(buildDefaultCartItem());
+      items.push(buildCartItem());
       writeCart(items);
       navigate("/payment");
     });
@@ -254,6 +289,60 @@ export default function EventDetail() {
                   ราคาบัตรเริ่มต้น {defaultTier.name}{" "}
                   {defaultTier.price.toLocaleString()} บาท
                 </p>
+              )}
+
+              {/* กล่องเลือกประเภทบัตรและจำนวน */}
+              {prices.length > 0 && (
+                <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-900 px-5 py-4 text-left">
+                  <p className="font-semibold mb-3 text-sm">
+                    เลือกประเภทบัตรและจำนวน
+                  </p>
+                  <div className="flex flex-col md:flex-row gap-4 items-center">
+                    {/* ประเภทบัตร */}
+                    <div className="flex-1 w-full">
+                      <label className="text-xs text-slate-300">
+                        ประเภทบัตร
+                      </label>
+                      <Select.Root
+                        value={selectedTierName}
+                        onValueChange={setSelectedTierName}
+                      >
+                        <Select.Trigger className="mt-1 w-full bg-slate-800 text-white px-4 py-2 rounded-md text-left text-sm">
+                          <Select.Value placeholder="เลือกประเภทบัตร" />
+                        </Select.Trigger>
+                        <Select.Portal>
+                          <Select.Content className="bg-slate-800 text-white rounded-md shadow-lg">
+                            {prices.map((p) => (
+                              <Select.Item
+                                key={p.name}
+                                value={p.name}
+                                className="px-4 py-2 cursor-pointer hover:bg-slate-700 text-sm"
+                              >
+                                {p.name} - {p.price.toLocaleString()} บาท
+                              </Select.Item>
+                            ))}
+                          </Select.Content>
+                        </Select.Portal>
+                      </Select.Root>
+                    </div>
+
+                    {/* จำนวนบัตร */}
+                    <div className="w-24">
+                      <label className="text-xs text-slate-300">
+                        จำนวนบัตร
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={ticketQty}
+                        onChange={(e) =>
+                          setTicketQty(Math.max(1, Number(e.target.value) || 1))
+                        }
+                        className="mt-1 w-full bg-white text-black px-3 py-2 rounded-md text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
               )}
 
               <div className="mt-4 flex flex-wrap gap-3 justify-center md:justify-start">
