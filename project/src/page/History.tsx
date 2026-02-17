@@ -23,7 +23,7 @@ type Order = {
   orderNumber: string;
   total: number;
   status: string;
-  createdAt: Timestamp;
+  createdAt?: Timestamp;
   items: OrderItem[];
 };
 
@@ -39,23 +39,29 @@ export default function History() {
         return;
       }
 
-      const q = query(
-        collection(db, "orders"),
-        where("userId", "==", user.uid),
-        orderBy("createdAt", "desc")
-      );
+      try {
+        const q = query(
+          collection(db, "orders"),
+          where("userId", "==", user.uid),
+          orderBy("createdAt", "desc")
+        );
 
-      const snap = await getDocs(q);
+        const snap = await getDocs(q);
 
-      const data: Order[] = snap.docs.map((doc) => {
-        const orderData = doc.data() as Omit<Order, "id">;
-        return {
-          id: doc.id,
-          ...orderData,
-        };
-      });
+        const data: Order[] = snap.docs.map((doc) => {
+          const orderData = doc.data() as Omit<Order, "id">;
+          return {
+            id: doc.id,
+            ...orderData,
+          };
+        });
 
-      setOrders(data);
+        setOrders(data);
+      } catch (error) {
+        console.error("Firestore error:", error);
+        setOrders([]);
+      }
+
       setLoading(false);
     });
 
@@ -81,13 +87,18 @@ export default function History() {
               <div>
                 <p className="font-semibold">{order.orderNumber}</p>
                 <p className="text-sm text-gray-500">{order.status}</p>
+                {order.createdAt && (
+                  <p className="text-xs text-gray-400">
+                    {order.createdAt.toDate().toLocaleString()}
+                  </p>
+                )}
               </div>
               <div className="font-semibold">
                 {order.total.toLocaleString()} บาท
               </div>
             </div>
 
-            {order.items.map((item, index) => (
+            {order.items?.map((item, index) => (
               <div key={index} className="flex justify-between mb-2">
                 <div>
                   {item.title} x{item.quantity}

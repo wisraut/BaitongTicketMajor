@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/useall/Header";
 import Footer from "../components/useall/Footer";
+import QRCode from "qrcode";
 
 type CartItem = {
   id: string;
@@ -20,6 +21,7 @@ export default function PaymentPage() {
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
   const [showQR, setShowQR] = useState(false);
+  const [qrImage, setQrImage] = useState("");
 
   const [errors, setErrors] = useState<{
     name?: string;
@@ -56,9 +58,6 @@ export default function PaymentPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ==============================
-  // ✅ CRC16 สำหรับ EMV QR
-  // ==============================
   const crc16 = (input: string) => {
     let crc = 0xffff;
     for (let i = 0; i < input.length; i++) {
@@ -76,9 +75,6 @@ export default function PaymentPage() {
       .padStart(4, "0");
   };
 
-  // ==============================
-  // ✅ Generate PromptPay QR Payload
-  // ==============================
   const generatePromptPayPayload = (
     phoneNumber: string,
     amount: number
@@ -106,15 +102,46 @@ export default function PaymentPage() {
     return payloadWithoutCRC + crc;
   };
 
+  const promptPayPayload = generatePromptPayPayload(
+    "0837951132",
+    total
+  );
+
   const handleConfirmPayment = () => {
     if (!validate()) return;
     setShowQR(true);
   };
 
-  const promptPayPayload = generatePromptPayPayload(
-    "0837951132",
-    total
-  );
+  useEffect(() => {
+    if (showQR) {
+      QRCode.toDataURL(promptPayPayload).then((url) => {
+        setQrImage(url);
+      });
+    }
+  }, [showQR]);
+
+  const handleFinishPayment = () => {
+    const history =
+      JSON.parse(localStorage.getItem("history") || "[]");
+
+    const newOrder = {
+      id: Date.now(),
+      name,
+      phone,
+      email,
+      address,
+      total,
+      cart,
+      date: new Date().toLocaleString(),
+    };
+
+    history.push(newOrder);
+    localStorage.setItem("history", JSON.stringify(history));
+
+    localStorage.removeItem("cart");
+
+    window.location.href = "/history";
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -127,7 +154,6 @@ export default function PaymentPage() {
 
         {!showQR && (
           <>
-            {/* ฟอร์ม */}
             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
               <div>
                 <input
@@ -198,7 +224,6 @@ export default function PaymentPage() {
               </div>
             </div>
 
-            {/* สรุปรายการ */}
             <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200 space-y-4">
               <h2 className="font-semibold">
                 สรุปรายการ
@@ -260,11 +285,13 @@ export default function PaymentPage() {
               สแกนเพื่อชำระเงิน (PromptPay)
             </h2>
 
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${promptPayPayload}`}
-              alt="PromptPay QR"
-              className="mx-auto"
-            />
+            {qrImage && (
+              <img
+                src={qrImage}
+                alt="PromptPay QR"
+                className="mx-auto"
+              />
+            )}
 
             <div className="text-left text-sm space-y-1">
               <p><strong>ชื่อ:</strong> {name}</p>
@@ -273,6 +300,13 @@ export default function PaymentPage() {
               <p><strong>ที่อยู่:</strong> {address}</p>
               <p><strong>ยอดชำระ:</strong> {total.toLocaleString()} บาท</p>
             </div>
+
+            <button
+              onClick={handleFinishPayment}
+              className="w-full rounded-full bg-green-600 px-4 py-3 text-white font-semibold"
+            >
+              ชำระเงินเรียบร้อย
+            </button>
           </div>
         )}
       </main>
