@@ -4,13 +4,12 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAodd1yedq7OmFxbWefWXBzMQsD5ku7kIY",
-  authDomain: "baitongticketmajor.firebaseapp.com",
-  projectId: "baitongticketmajor",
-  storageBucket: "baitongticketmajor.firebasestorage.app",
-  messagingSenderId: "470891624418",
-  appId: "1:470891624418:web:87e0c73931e4ffa46aebbb",
-  measurementId: "G-W639F9ZV17",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

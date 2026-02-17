@@ -38,7 +38,9 @@ export default function CartPage() {
 
   const handleChangeQty = (id: string, quantity: number) => {
     if (quantity <= 0) return;
-    const next = items.map((it) => (it.id === id ? { ...it, quantity } : it));
+    const next = items.map((it) =>
+      it.id === id ? { ...it, quantity } : it
+    );
     updateAndSave(next);
   };
 
@@ -51,10 +53,18 @@ export default function CartPage() {
     updateAndSave([]);
   };
 
-  const total = items.reduce((sum, it) => sum + it.unitPrice * it.quantity, 0);
+  const total = items.reduce(
+    (sum, it) => sum + it.unitPrice * it.quantity,
+    0
+  );
 
+  // ✅ เพิ่มตรงนี้อย่างเดียว
   const handleGoPayment = () => {
     if (items.length === 0) return;
+
+    // sync key ให้หน้า payment
+    localStorage.setItem("cart", JSON.stringify(items));
+
     navigate("/payment");
   };
 
@@ -63,10 +73,14 @@ export default function CartPage() {
       <Header />
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-4">ตะกร้าสินค้า</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-4">
+          ตะกร้าสินค้า
+        </h1>
 
         {items.length === 0 ? (
-          <p className="text-sm text-slate-600">ยังไม่มีสินค้าในตะกร้า</p>
+          <p className="text-sm text-slate-600">
+            ยังไม่มีสินค้าในตะกร้า
+          </p>
         ) : (
           <div className="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
             <div className="space-y-4">
@@ -84,33 +98,45 @@ export default function CartPage() {
                       />
                     )}
                   </div>
+
                   <div className="flex-1 space-y-1">
                     <p className="text-sm font-semibold text-slate-900">
                       {item.title}
                     </p>
+
                     {item.option && (
                       <p className="text-xs text-slate-600">
                         ตัวเลือก: {item.option}
                       </p>
                     )}
+
                     <p className="text-xs text-slate-500">
-                      ประเภท: {item.type === "event" ? "งานแสดง" : "สินค้า"}
+                      ประเภท:{" "}
+                      {item.type === "event"
+                        ? "งานแสดง"
+                        : "สินค้า"}
                     </p>
                   </div>
+
                   <div className="flex flex-col items-end justify-between gap-2">
                     <p className="text-sm font-semibold text-slate-900">
                       {item.unitPrice.toLocaleString()} บาท
                     </p>
+
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
                         min={1}
                         value={item.quantity}
                         onChange={(e) =>
-                          handleChangeQty(item.id, Number(e.target.value) || 1)
+                          handleChangeQty(
+                            item.id,
+                            Number(e.target.value) || 1
+                          )
                         }
                         className="w-16 rounded-lg border border-slate-300 px-2 py-1 text-xs"
                       />
+
                       <button
                         type="button"
                         onClick={() => handleRemove(item.id)}
@@ -122,6 +148,7 @@ export default function CartPage() {
                   </div>
                 </div>
               ))}
+
               <button
                 type="button"
                 onClick={handleClear}
@@ -135,10 +162,12 @@ export default function CartPage() {
               <h2 className="text-sm font-semibold text-slate-900">
                 สรุปรายการ
               </h2>
+
               <div className="flex justify-between text-sm text-slate-700">
                 <span>ยอดรวม</span>
                 <span>{total.toLocaleString()} บาท</span>
               </div>
+
               <button
                 type="button"
                 onClick={handleGoPayment}
